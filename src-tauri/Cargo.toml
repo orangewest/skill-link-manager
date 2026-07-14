@@ -1,0 +1,26 @@
+[package]
+name = "skill-link-manager"
+version = "0.1.0"
+description = "Manage skill links across multiple tool directories"
+authors = ["you"]
+edition = "2021"
+
+[lib]
+name = "skill_link_manager_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri = { version = "2", features = [] }
+tauri-plugin-dialog = "2"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+dirs = "5"
+
+# Windows uses directory junctions (no admin/Developer Mode needed);
+# macOS & Linux use symbolic links via std::os::unix::fs::symlink, which
+# is in std — no extra dependency required there.
+[target.'cfg(windows)'.dependencies]
+junction = "1"

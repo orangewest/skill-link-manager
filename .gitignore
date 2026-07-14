@@ -1,0 +1,33 @@
+# Dependencies
+node_modules/
+
+# Frontend build output
+dist/
+
+# Rust build artifacts (Tauri)
+/src-tauri/target/
+**/*.rs.bk
+
+# Tauri generated files
+/src-tauri/gen/
+
+# Config / app state (user-specific, not committed)
+config.json
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Editor / IDE
+.idea/
+.vscode/
+*.swp
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Workbuddy (project-local tooling)
+.workbuddy/
