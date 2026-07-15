@@ -55,7 +55,8 @@ export type TranslationKey =
   | "linksRemoved"
   | "confirm"
   | "deleteLinks"
-  | "keepLinks";
+  | "keepLinks"
+  | "pathExists";
 
 export const translations: Record<Language, Record<TranslationKey, string>> = {
   zh: {
@@ -114,6 +115,7 @@ export const translations: Record<Language, Record<TranslationKey, string>> = {
     confirm: "\u786e\u8ba4",
     deleteLinks: "\u5220\u9664\u94fe\u63a5",
     keepLinks: "\u4fdd\u7559\u94fe\u63a5",
+    pathExists: "\u8be5\u8def\u5f84\u5df2\u5b58\u5728",
   },
   en: {
     appTitle: "Skill Link Manager",
@@ -171,5 +173,6 @@ export const translations: Record<Language, Record<TranslationKey, string>> = {
     confirm: "Confirm",
     deleteLinks: "Delete Links",
     keepLinks: "Keep Links",
+    pathExists: "Path already exists",
   },
 };

@@ -3,6 +3,8 @@ import { invoke } from "@tauri-apps/api/core";
 import type { ToolDirConfig, AppConfig } from "../types";
 import { useI18n } from "../i18n/I18nContext";
 import PathInput from "./PathInput";
+import { useAutoName } from "../hooks/useAutoName";
+import { pathsEqual } from "../utils/path";
 
 interface Props {
   onComplete: (config: AppConfig) => void;
@@ -15,8 +17,14 @@ export default function Onboarding({ onComplete }: Props) {
   const [detectedAgents, setDetectedAgents] = useState<ToolDirConfig[]>([]);
   const [checkedAgents, setCheckedAgents] = useState<Set<string>>(new Set());
   const [manualToolDirs, setManualToolDirs] = useState<ToolDirConfig[]>([]);
-  const [newName, setNewName] = useState("");
-  const [newPath, setNewPath] = useState("");
+  // Manual-add form — name auto-derives from the path (see useAutoName).
+  const {
+    name: newName,
+    path: newPath,
+    setName: setNewName,
+    setPath: setNewPath,
+    reset: resetManualAdd,
+  } = useAutoName();
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -70,13 +78,24 @@ export default function Onboarding({ onComplete }: Props) {
   const handleAddManual = () => {
     if (!newName.trim() || !newPath.trim()) return;
     setManualToolDirs([...manualToolDirs, { name: newName.trim(), path: newPath.trim() }]);
-    setNewName("");
-    setNewPath("");
+    resetManualAdd();
   };
 
   const handleRemoveManual = (index: number) => {
     setManualToolDirs(manualToolDirs.filter((_, i) => i !== index));
   };
+
+  // Live duplicate-path check against the manual dirs AND the selected
+  // detected agents (which get merged on completion). Matches the backend's
+  // case-insensitive comparison on Win/macOS.
+  const manualDuplicatePath =
+    newPath.trim() !== "" &&
+    [
+      ...manualToolDirs.map((td) => td.path),
+      ...detectedAgents
+        .filter((a) => checkedAgents.has(a.name))
+        .map((a) => a.path),
+    ].some((p) => pathsEqual(p, newPath.trim()));
 
   const handleComplete = async () => {
     if (!sharedDir.trim()) return;
@@ -174,7 +193,7 @@ export default function Onboarding({ onComplete }: Props) {
         {/* Manual add */}
         <div className="mb-3">
           <p className="mb-2 text-xs font-medium text-gray-600 dark:text-gray-400">{t("onboardingManualAdd")}</p>
-          <div className="flex items-center gap-2 rounded-lg border border-dashed border-gray-300 p-3 dark:border-gray-600">
+          <div className="flex items-start gap-2 rounded-lg border border-dashed border-gray-300 p-3 dark:border-gray-600">
             <input
               type="text"
               value={newName}
@@ -182,16 +201,28 @@ export default function Onboarding({ onComplete }: Props) {
               placeholder={t("toolDirName")}
               className="w-24 flex-shrink-0 rounded border border-gray-300 bg-white px-2 py-1 text-sm focus:border-blue-400 focus:outline-none dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
             />
-            <PathInput
-              value={newPath}
-              onChange={setNewPath}
-              placeholder={t("toolDirPath")}
-              className="min-w-0 flex-1"
-              ariaLabel={t("toolDirPath")}
-            />
+            <div className="min-w-0 flex-1">
+              <PathInput
+                value={newPath}
+                onChange={setNewPath}
+                placeholder={t("toolDirPath")}
+                className="w-full"
+                ariaLabel={t("toolDirPath")}
+              />
+              {manualDuplicatePath && (
+                <p className="mt-1 flex items-center gap-1 text-xs text-red-600 dark:text-red-400">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-3.5 w-3.5 flex-shrink-0">
+                    <path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+                    <line x1="12" y1="9" x2="12" y2="13" />
+                    <line x1="12" y1="17" x2="12.01" y2="17" />
+                  </svg>
+                  {t("pathExists")}
+                </p>
+              )}
+            </div>
             <button
               onClick={handleAddManual}
-              disabled={!newName.trim() || !newPath.trim()}
+              disabled={!newName.trim() || !newPath.trim() || manualDuplicatePath}
               className="flex-shrink-0 rounded bg-green-600 px-3 py-1 text-sm text-white transition-colors hover:bg-green-700 disabled:cursor-not-allowed disabled:bg-gray-300 dark:disabled:bg-gray-700"
             >
               {t("add")}

@@ -1,0 +1,20 @@
+[
+  { "name": "opencode",  "path": ".config/opencode/skills" },
+  { "name": "mimocode",  "path": ".config/mimocode/skills" },
+  { "name": "codebuddy", "path": ".codebuddy/skills" },
+  { "name": "comate",    "path": ".comate/skills" },
+  { "name": "trae-cn",   "path": ".trae-cn/skills" },
+  { "name": "workbuddy", "path": ".workbuddy/skills" },
+  { "name": "qclaw",     "path": ".qclaw/skills" },
+  { "name": "codex",     "path": ".codex/skills" },
+  { "name": "claude",    "path": ".claude/skills" },
+  { "name": "cline",     "path": ".cline/skills" },
+  { "name": "roo",       "path": ".roo/skills" },
+  { "name": "continue",  "path": ".continue/skills" },
+  { "name": "gemini",    "path": ".gemini/skills" },
+  { "name": "cursor",    "path": ".cursor/skills" },
+  { "name": "windsurf",  "path": ".codeium/windsurf/skills" },
+  { "name": "augment",   "path": ".augment/skills" },
+  { "name": "copilot",   "path": ".copilot/skills" },
+  { "name": "kiro",      "path": ".kiro/skills" }
+]

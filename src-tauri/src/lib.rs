@@ -2,6 +2,7 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::fs;
 use std::path::{Path, PathBuf};
+use std::sync::OnceLock;
 
 // ============================================================
 //  Data Structures (shared with frontend via serde)
@@ -153,7 +154,7 @@ fn load_config_internal() -> AppConfig {
 
 /// Normalise path separators to the OS-native form for display/storage.
 ///
-/// The `KNOWN_AGENTS` registry uses `/`-separated relative paths (e.g.
+/// The `known_agents.json` registry uses `/`-separated relative paths (e.g.
 /// `.config/opencode/skills`). On Windows, `PathBuf::join` preserves those
 /// forward slashes, producing mixed-separator strings like
 /// `C:\Users\jinpeng\.config/opencode/skills`. This converts `/` → `\` on
@@ -989,33 +990,36 @@ fn remove_tool_dir_links(tool_dir_name: String) -> Result<usize, String> {
 
 /// Built-in registry of known agent skill directories.
 ///
-/// Each entry: `(display_name, relative_path_from_home_to_skills_dir)`.
-/// Detection checks whether the **parent** of the skills dir exists
-/// (i.e. the agent is installed). The `skills` subfolder itself may
-/// not exist yet — it will be created automatically on first apply.
-const KNOWN_AGENTS: &[(&str, &str)] = &[
-    ("opencode", ".config/opencode/skills"),
-    ("mimocode", ".config/mimocode/skills"),
-    ("codebuddy", ".codebuddy/skills"),
-    ("trae-cn", ".trae-cn/skills"),
-    ("workbuddy", ".workbuddy/skills"),
-    ("qclaw", ".qclaw/skills"),
-    ("codex", ".codex/skills"),
-    ("claude", ".claude/skills"),
-    ("cline", ".cline/skills"),
-    ("roo", ".roo/skills"),
-    ("continue", ".continue/skills"),
-    ("gemini", ".gemini/skills"),
-    ("cursor", ".cursor/skills"),
-    ("windsurf", ".codeium/windsurf/skills"),
-    ("augment", ".augment/skills"),
-    ("copilot", ".copilot/skills"),
-    ("kiro", ".kiro/skills"),
-];
+/// The list lives in `known_agents.json` (same directory as this file) so
+/// that adding a new default path only requires editing that file — no Rust
+/// changes needed. It is embedded at compile time via `include_str!` and
+/// parsed once, then cached.
+///
+/// Each entry: `name` (display/id) and `path` (relative path from the user's
+/// home directory to the agent's `skills` dir). Detection checks whether the
+/// **parent** of the skills dir exists (i.e. the agent is installed). The
+/// `skills` subfolder itself may not exist yet — it will be created
+/// automatically on first apply.
+#[derive(Deserialize, Clone)]
+struct KnownAgent {
+    name: String,
+    path: String,
+}
+
+/// Load the known-agent registry from `known_agents.json` (embedded at
+/// compile time). Parsed lazily on first use and cached for the process
+/// lifetime.
+fn known_agents() -> &'static [KnownAgent] {
+    static AGENTS: OnceLock<Vec<KnownAgent>> = OnceLock::new();
+    AGENTS.get_or_init(|| {
+        let raw = include_str!("known_agents.json");
+        serde_json::from_str(raw).expect("Failed to parse embedded known_agents.json")
+    })
+}
 
 /// Detect known agent skill directories that exist on this machine.
 ///
-/// For each entry in `KNOWN_AGENTS`, checks whether the **parent** of
+/// For each entry in `known_agents.json`, checks whether the **parent** of
 /// the `skills` subfolder exists (meaning the agent is installed).
 /// Returns the list of `ToolDirConfig` entries whose parent dirs exist.
 #[tauri::command]
@@ -1025,14 +1029,14 @@ fn detect_known_agents() -> Vec<ToolDirConfig> {
         None => return Vec::new(),
     };
     let mut result = Vec::new();
-    for (name, rel_path) in KNOWN_AGENTS {
-        let skills_path = home.join(rel_path);
+    for agent in known_agents() {
+        let skills_path = home.join(&agent.path);
         // Check parent directory (agent install dir) — the skills
         // subfolder may not exist yet and will be created on apply.
         if let Some(parent) = skills_path.parent() {
             if parent.exists() {
                 result.push(ToolDirConfig {
-                    name: (*name).to_string(),
+                    name: agent.name.clone(),
                     path: native_path_str(&skills_path.to_string_lossy()),
                 });
             }

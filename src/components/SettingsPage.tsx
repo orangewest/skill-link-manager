@@ -4,6 +4,8 @@ import type { AppConfig, ToolDirConfig } from "../types";
 import { useI18n } from "../i18n/I18nContext";
 import PathInput from "./PathInput";
 import ConfirmDialog from "./ConfirmDialog";
+import { useAutoName } from "../hooks/useAutoName";
+import { pathsEqual } from "../utils/path";
 
 interface Props {
   config: AppConfig;
@@ -30,9 +32,15 @@ export default function SettingsPage({ config, onConfigSaved, onBack, onToolDirC
   const [deleteTarget, setDeleteTarget] = useState<number | null>(null);
   const [askDeleteLinks, setAskDeleteLinks] = useState(false);
 
-  // Add new tool dir form
-  const [newName, setNewName] = useState("");
-  const [newPath, setNewPath] = useState("");
+  // Add new tool dir form — name auto-derives from the path until the
+  // user manually edits the name field (see useAutoName).
+  const {
+    name: newName,
+    path: newPath,
+    setName: setNewName,
+    setPath: setNewPath,
+    reset: resetNewToolDir,
+  } = useAutoName();
 
   // Edit tool dir
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
@@ -105,8 +113,7 @@ export default function SettingsPage({ config, onConfigSaved, onBack, onToolDirC
     if (!newName.trim() || !newPath.trim()) return;
     setToolDirs([...toolDirs, { name: newName.trim(), path: newPath.trim() }]);
     setToolDirsChecked((prev) => ({ ...prev, [newName.trim()]: true }));
-    setNewName("");
-    setNewPath("");
+    resetNewToolDir();
   };
 
   const handleStartEdit = (index: number) => {
@@ -195,6 +202,13 @@ export default function SettingsPage({ config, onConfigSaved, onBack, onToolDirC
       [name]: !(prev[name] ?? true),
     }));
   };
+
+  // Live duplicate-path check: as soon as the entered path matches an
+  // existing tool dir (case-insensitive on Win/macOS, per backend rules),
+  // surface the hint and disable the Add button.
+  const duplicatePath =
+    newPath.trim() !== "" &&
+    toolDirs.some((td) => pathsEqual(td.path, newPath.trim()));
 
   return (
     <div>
@@ -331,7 +345,7 @@ export default function SettingsPage({ config, onConfigSaved, onBack, onToolDirC
         </div>
 
         {/* Add new tool dir */}
-        <div className="mb-4 flex items-center gap-2 rounded-lg border border-dashed border-gray-300 p-3 dark:border-gray-600">
+        <div className="flex items-start gap-2 rounded-lg border border-dashed border-gray-300 p-3 dark:border-gray-600">
           <input
             type="text"
             value={newName}
@@ -339,16 +353,28 @@ export default function SettingsPage({ config, onConfigSaved, onBack, onToolDirC
             placeholder={t("toolDirName")}
             className="w-24 flex-shrink-0 rounded border border-gray-300 px-2 py-1 text-sm focus:border-blue-400 focus:outline-none dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100"
           />
-          <PathInput
-            value={newPath}
-            onChange={setNewPath}
-            placeholder={t("toolDirPath")}
-            className="min-w-0 flex-1"
-            ariaLabel={t("toolDirPath")}
-          />
+          <div className="min-w-0 flex-1">
+            <PathInput
+              value={newPath}
+              onChange={setNewPath}
+              placeholder={t("toolDirPath")}
+              className="w-full"
+              ariaLabel={t("toolDirPath")}
+            />
+            {duplicatePath && (
+              <p className="mt-1 flex items-center gap-1 text-xs text-red-600 dark:text-red-400">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-3.5 w-3.5 flex-shrink-0">
+                  <path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+                  <line x1="12" y1="9" x2="12" y2="13" />
+                  <line x1="12" y1="17" x2="12.01" y2="17" />
+                </svg>
+                {t("pathExists")}
+              </p>
+            )}
+          </div>
           <button
             onClick={handleAddToolDir}
-            disabled={!newName.trim() || !newPath.trim()}
+            disabled={!newName.trim() || !newPath.trim() || duplicatePath}
             className="flex-shrink-0 rounded bg-green-600 px-3 py-1 text-sm text-white transition-colors hover:bg-green-700 disabled:cursor-not-allowed disabled:bg-gray-300 dark:disabled:bg-gray-700"
           >
             {t("add")}
