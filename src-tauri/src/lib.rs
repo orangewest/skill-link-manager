@@ -868,6 +868,49 @@ fn remove_link(skill_name: String, tool_dir_name: String) -> Result<(), String> 
     }
 }
 
+/// Delete a skill entirely: first unlink it from every tool directory that
+/// links to it, then delete the skill folder in the shared directory.
+///
+/// Unlinking reuses the same safety logic as `remove_link` (only removes a
+/// link whose target points back at this skill). The final folder delete is
+/// `remove_dir_all` on the shared skill folder — it does NOT touch the
+/// contents of any tool directory (links were already removed above).
+#[tauri::command]
+fn delete_skill(skill_name: String) -> Result<usize, String> {
+    let config = load_config_internal();
+    let shared_dir = PathBuf::from(&config.shared_dir);
+    let skill_path = shared_dir.join(&skill_name);
+    if !skill_path.exists() {
+        return Err(format!("Skill not found: {}", skill_name));
+    }
+
+    // --- Step 1: remove every link pointing at this skill ---
+    let mut unlinked = 0usize;
+    for td in &config.tool_dirs {
+        let target = PathBuf::from(&td.path).join(&skill_name);
+        match platform::get_link_target(&target) {
+            Ok(current_target) => {
+                if platform::paths_equal(&current_target, &skill_path) {
+                    match platform::remove_link(&target) {
+                        Ok(()) => unlinked += 1,
+                        Err(e) => eprintln!(
+                            "Warning: failed to remove link '{}': {}",
+                            skill_name, e
+                        ),
+                    }
+                }
+            }
+            Err(_) => continue,
+        }
+    }
+
+    // --- Step 2: delete the skill folder in the shared directory ---
+    fs::remove_dir_all(&skill_path)
+        .map_err(|e| format!("Failed to delete skill folder '{}': {}", skill_name, e))?;
+
+    Ok(unlinked)
+}
+
 /// Create a single link for a specific skill in a specific tool directory.
 /// Reuses the same safety logic as `apply_links`.
 #[tauri::command]
@@ -1161,6 +1204,7 @@ pub fn run() {
             get_skill_detail,
             remove_link,
             add_link,
+            delete_skill,
             remove_tool_dir_links,
             detect_known_agents,
             config_file_exists,

@@ -56,7 +56,15 @@ export type TranslationKey =
   | "confirm"
   | "deleteLinks"
   | "keepLinks"
-  | "pathExists";
+  | "pathExists"
+  | "refresh"
+  | "deleteSkill"
+  | "deleteSkillConfirmBody"
+  | "continueButton"
+  | "deleteSkillFinalTitle"
+  | "deleteSkillFinalBody"
+  | "deleting"
+  | "deleteSkillSuccess";
 
 export const translations: Record<Language, Record<TranslationKey, string>> = {
   zh: {
@@ -116,6 +124,14 @@ export const translations: Record<Language, Record<TranslationKey, string>> = {
     deleteLinks: "\u5220\u9664\u94fe\u63a5",
     keepLinks: "\u4fdd\u7559\u94fe\u63a5",
     pathExists: "\u8be5\u8def\u5f84\u5df2\u5b58\u5728",
+    refresh: "\u5237\u65b0",
+    deleteSkill: "\u5220\u9664 Skill",
+    deleteSkillConfirmBody: "\u6b64\u64cd\u4f5c\u5c06\u89e3\u9664\u8be5 Skill \u5728\u6240\u6709\u5de5\u5177\u76ee\u5f55\u4e2d\u7684\u94fe\u63a5\uff0c\u5e76\u6c38\u4e45\u5220\u9664\u5171\u4eab\u76ee\u5f55\u4e0b\u7684 Skill \u6587\u4ef6\u5939\u3002\u6b64\u64cd\u4f5c\u4e0d\u53ef\u64a4\u9500\u3002",
+    continueButton: "\u7ee7\u7eed",
+    deleteSkillFinalTitle: "\u786e\u8ba4\u5220\u9664",
+    deleteSkillFinalBody: "\u8bf7\u8f93\u5165 Skill \u540d\u79f0\u4ee5\u786e\u8ba4\u6c38\u4e45\u5220\u9664\uff1a",
+    deleting: "\u5220\u9664\u4e2d...",
+    deleteSkillSuccess: "\u5df2\u5220\u9664 Skill '{name}'\uff0c\u5e76\u89e3\u9664 {count} \u4e2a\u94fe\u63a5",
   },
   en: {
     appTitle: "Skill Link Manager",
@@ -174,5 +190,13 @@ export const translations: Record<Language, Record<TranslationKey, string>> = {
     deleteLinks: "Delete Links",
     keepLinks: "Keep Links",
     pathExists: "Path already exists",
+    refresh: "Refresh",
+    deleteSkill: "Delete Skill",
+    deleteSkillConfirmBody: "This will unlink the skill from all tool directories and permanently delete its folder in the shared directory. This action cannot be undone.",
+    continueButton: "Continue",
+    deleteSkillFinalTitle: "Confirm Deletion",
+    deleteSkillFinalBody: "Type the skill name to confirm permanent deletion:",
+    deleting: "Deleting...",
+    deleteSkillSuccess: "Deleted skill '{name}' and removed {count} link(s)",
   },
 };

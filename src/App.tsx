@@ -32,6 +32,7 @@ function AppContent() {
   const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [refreshing, setRefreshing] = useState(false);
   const configRef = useRef<AppConfig | null>(null);
 
   // ---- Initial load: check config existence → onboarding or normal ----
@@ -138,6 +139,17 @@ function AppContent() {
   const handleToolDirClick = useCallback((name: string) => {
     setSelectedToolDirName(name);
     setCurrentPage("toolDirDetail");
+  }, []);
+
+  const handleRefreshSkills = useCallback(() => {
+    setRefreshing(true);
+    setError(null);
+    invoke<SkillInfo[]>("scan_skills")
+      .then(setSkills)
+      .catch((e: unknown) =>
+        setError(typeof e === "string" ? e : String(e))
+      )
+      .finally(() => setRefreshing(false));
   }, []);
 
   const handleBackFromToolDirDetail = useCallback(() => {
@@ -268,7 +280,7 @@ function AppContent() {
         {/* ---- Home view ---- */}
         {!loading && currentPage === "home" && (
           <>
-            {/* Search */}
+            {/* Search + Refresh */}
             <div className="mb-4 flex items-center gap-3">
               <input
                 type="text"
@@ -277,6 +289,27 @@ function AppContent() {
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="flex-1 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm focus:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
               />
+              <button
+                onClick={handleRefreshSkills}
+                disabled={refreshing}
+                title={t("refresh")}
+                className="flex h-[38px] items-center justify-center rounded-lg border border-gray-300 px-3 text-gray-600 transition-colors hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className={"h-4 w-4" + (refreshing ? " animate-spin" : "")}
+                >
+                  <polyline points="23 4 23 10 17 10" />
+                  <polyline points="1 20 1 14 7 14" />
+                  <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" />
+                </svg>
+              </button>
             </div>
 
             {/* Skill cards grid */}
