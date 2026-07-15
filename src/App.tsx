@@ -8,8 +8,18 @@ import SkillDetail from "./components/SkillDetail";
 import SettingsPage from "./components/SettingsPage";
 import ToolDirDetail from "./components/ToolDirDetail";
 import Onboarding from "./components/Onboarding";
+import ThemeToggle from "./components/ThemeToggle";
+import type { Theme } from "./components/ThemeToggle";
 
 type Page = "home" | "detail" | "settings" | "toolDirDetail" | "onboarding";
+
+/** Apply the given theme to the document root element. */
+function applyTheme(theme: Theme) {
+  const root = document.documentElement;
+  const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+  const shouldUseDark = theme === "dark" || (theme === "system" && prefersDark);
+  root.classList.toggle("dark", shouldUseDark);
+}
 
 function AppContent() {
   const { t, language, setLanguage } = useI18n();
@@ -55,6 +65,17 @@ function AppContent() {
     init();
   }, [setLanguage]);
 
+  // ---- Theme application: apply theme + listen to system changes ----
+  const theme: Theme = (config?.theme as Theme) ?? "system";
+  useEffect(() => {
+    applyTheme(theme);
+    if (theme !== "system") return;
+    const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
+    const handler = () => applyTheme("system");
+    mediaQuery.addEventListener("change", handler);
+    return () => mediaQuery.removeEventListener("change", handler);
+  }, [theme]);
+
   // ---- Handlers ----
   const handleSkillClick = useCallback((name: string) => {
     setSelectedSkillName(name);
@@ -75,6 +96,21 @@ function AppContent() {
       }
     },
     [setLanguage]
+  );
+
+  const handleThemeChange = useCallback(
+    (newTheme: Theme) => {
+      const currentConfig = configRef.current;
+      if (currentConfig) {
+        const newConfig = { ...currentConfig, theme: newTheme };
+        configRef.current = newConfig;
+        setConfig(newConfig);
+        invoke("save_config", { config: newConfig }).catch((e: unknown) =>
+          console.error("Failed to save config:", e)
+        );
+      }
+    },
+    []
   );
 
   const handleConfigSaved = useCallback((newConfig: AppConfig) => {
@@ -138,7 +174,7 @@ function AppContent() {
     : skills;
 
   return (
-    <div className="min-h-screen bg-gray-50 text-gray-800">
+    <div className="min-h-screen bg-gray-50 text-gray-800 dark:bg-gray-900 dark:text-gray-100">
       <div className="mx-auto max-w-4xl p-6">
         {/* Header */}
         <div className="mb-6 flex items-center justify-between">
@@ -155,14 +191,16 @@ function AppContent() {
             </div>
             <div>
               <h1 className="text-xl font-bold">{t("appTitle")}</h1>
-              <p className="text-sm text-gray-500">{t("appSubtitle")}</p>
+              <p className="text-sm text-gray-500 dark:text-gray-400">{t("appSubtitle")}</p>
             </div>
           </div>
           <div className="flex items-center gap-2">
+            {/* Theme toggle */}
+            <ThemeToggle theme={theme} onChange={handleThemeChange} />
             {/* Language toggle */}
             <button
               onClick={() => handleLanguageChange(language === "zh" ? "en" : "zh")}
-              className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-100"
+              className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-100 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700"
             >
               {language === "zh" ? "EN" : "\u4e2d"}
             </button>
@@ -171,14 +209,14 @@ function AppContent() {
               currentPage !== "settings" ? (
                 <button
                   onClick={() => setCurrentPage("settings")}
-                  className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-100"
+                  className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-100 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700"
                 >
                   {t("settings")}
                 </button>
               ) : (
                 <button
                   onClick={() => setCurrentPage("home")}
-                  className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-100"
+                  className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-100 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700"
                 >
                   {t("home")}
                 </button>
@@ -189,7 +227,7 @@ function AppContent() {
 
         {/* Error */}
         {error && (
-          <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+          <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-800 dark:bg-red-900/30 dark:text-red-300">
             <strong>{t("error")}: </strong>
             {error}
           </div>
@@ -197,7 +235,7 @@ function AppContent() {
 
         {/* Loading */}
         {loading && (
-          <div className="flex items-center gap-3 py-10 text-gray-500">
+          <div className="flex items-center gap-3 py-10 text-gray-500 dark:text-gray-400">
             <svg
               className="h-5 w-5 animate-spin text-blue-500"
               xmlns="http://www.w3.org/2000/svg"
@@ -237,13 +275,13 @@ function AppContent() {
                 placeholder={t("searchPlaceholder")}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="flex-1 rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400"
+                className="flex-1 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm focus:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
               />
             </div>
 
             {/* Skill cards grid */}
             {filteredSkills.length === 0 ? (
-              <p className="py-6 text-center text-sm text-gray-400">
+              <p className="py-6 text-center text-sm text-gray-400 dark:text-gray-500">
                 {searchQuery ? t("noSearchResults") : t("noSkills")}
               </p>
             ) : (

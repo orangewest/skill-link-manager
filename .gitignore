@@ -14,6 +14,9 @@ dist/
 # Config / app state (user-specific, not committed)
 config.json
 
+# Vite temp cache files
+vite.config.ts.timestamp-*.mjs
+
 # Logs
 *.log
 npm-debug.log*

@@ -54,13 +54,13 @@ export default function PathInput({
 
   const inputClasses =
     size === "lg"
-      ? "rounded-lg border border-gray-300 px-3 py-2 text-sm"
-      : "rounded border border-gray-300 px-2 py-1 text-sm";
+      ? "rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
+      : "rounded border border-gray-300 bg-white px-2 py-1 text-sm dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100";
 
   const btnClasses =
     size === "lg"
-      ? "flex-shrink-0 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100"
-      : "flex-shrink-0 rounded border border-gray-300 bg-white px-2.5 py-1 text-xs font-medium text-gray-600 hover:bg-gray-100";
+      ? "flex-shrink-0 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
+      : "flex-shrink-0 rounded border border-gray-300 bg-white px-2.5 py-1 text-xs font-medium text-gray-600 hover:bg-gray-100 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700";
 
   return (
     <div className={`flex gap-2 ${className}`}>

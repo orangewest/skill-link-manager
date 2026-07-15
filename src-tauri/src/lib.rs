@@ -83,6 +83,13 @@ pub struct AppConfig {
     pub tool_dirs_checked: HashMap<String, bool>,
     pub skills_checked: HashMap<String, bool>,
     pub language: String,
+    /// Theme preference: "light", "dark", or "system".
+    #[serde(default = "default_theme")]
+    pub theme: String,
+}
+
+fn default_theme() -> String {
+    "system".to_string()
 }
 
 /// Partial config for backward-compatible deserialization.
@@ -100,6 +107,8 @@ struct AppConfigPartial {
     skills_checked: Option<HashMap<String, bool>>,
     #[serde(default)]
     language: Option<String>,
+    #[serde(default)]
+    theme: Option<String>,
 }
 
 impl Default for AppConfig {
@@ -114,6 +123,7 @@ impl Default for AppConfig {
             tool_dirs_checked: HashMap::new(),
             skills_checked: HashMap::new(),
             language: "zh".to_string(),
+            theme: "system".to_string(),
         }
     }
 }
@@ -181,6 +191,7 @@ fn parse_config(content: &str) -> AppConfig {
         tool_dirs_checked: partial.tool_dirs_checked.unwrap_or(default.tool_dirs_checked),
         skills_checked: partial.skills_checked.unwrap_or(default.skills_checked),
         language: partial.language.unwrap_or(default.language),
+        theme: partial.theme.unwrap_or(default.theme),
     }
 }
 
@@ -442,9 +453,12 @@ fn scan_skills() -> Result<Vec<SkillInfo>, String> {
         ));
     }
 
+    // Only consider tool dirs that are checked (enabled) — unchecked
+    // dirs are hidden from the home page skill list and link counts.
     let tool_dirs: Vec<(String, PathBuf)> = config
         .tool_dirs
         .iter()
+        .filter(|td| *config.tool_dirs_checked.get(&td.name).unwrap_or(&true))
         .map(|td| (td.name.clone(), PathBuf::from(&td.path)))
         .collect();
     let mut skills: Vec<SkillInfo> = Vec::new();
@@ -785,6 +799,11 @@ fn get_skill_detail(skill_name: String) -> Result<SkillDetail, String> {
     let mut linked_dirs = Vec::new();
 
     for td in &config.tool_dirs {
+        // Skip unchecked (disabled) tool dirs — they should not appear
+        // in the skill detail view's link list.
+        if !*config.tool_dirs_checked.get(&td.name).unwrap_or(&true) {
+            continue;
+        }
         let target = PathBuf::from(&td.path).join(&skill_name);
         let linked = platform::get_link_target(&target)
             .map(|t| platform::paths_equal(&t, &skill_path))
@@ -913,6 +932,55 @@ fn add_link(skill_name: String, tool_dir_name: String) -> Result<(), String> {
             Ok(())
         }
     }
+}
+
+/// Remove all links in a tool directory that point to skills in the shared
+/// directory. Used when a user deletes a tool dir and chooses to also clean
+/// up the links on disk.
+///
+/// Only links whose target's parent matches the shared dir are removed —
+/// other entries (regular files, dirs, links to elsewhere) are left untouched.
+#[tauri::command]
+fn remove_tool_dir_links(tool_dir_name: String) -> Result<usize, String> {
+    let config = load_config_internal();
+    let shared_dir = PathBuf::from(&config.shared_dir);
+
+    let tool_dir = config
+        .tool_dirs
+        .iter()
+        .find(|td| td.name == tool_dir_name)
+        .ok_or_else(|| format!("Unknown tool directory: {}", tool_dir_name))?;
+    let tool_dir_path = PathBuf::from(&tool_dir.path);
+
+    if !tool_dir_path.exists() {
+        return Ok(0);
+    }
+
+    let entries = fs::read_dir(&tool_dir_path)
+        .map_err(|e| format!("Failed to read tool directory '{}': {}", tool_dir_path.display(), e))?;
+
+    let mut removed = 0usize;
+    for entry in entries.flatten() {
+        let entry_path = entry.path();
+        // Only consider links
+        if let Ok(target) = platform::get_link_target(&entry_path) {
+            // Check if the link points to a skill in the shared dir
+            // (target's parent should be the shared dir)
+            if let Some(parent) = target.parent() {
+                if platform::paths_equal(parent, &shared_dir) {
+                    match platform::remove_link(&entry_path) {
+                        Ok(()) => removed += 1,
+                        Err(e) => eprintln!(
+                            "Warning: failed to remove link '{}': {}",
+                            entry.file_name().to_string_lossy(),
+                            e
+                        ),
+                    }
+                }
+            }
+        }
+    }
+    Ok(removed)
 }
 
 // ============================================================
@@ -1089,6 +1157,7 @@ pub fn run() {
             get_skill_detail,
             remove_link,
             add_link,
+            remove_tool_dir_links,
             detect_known_agents,
             config_file_exists,
             check_path_exists,

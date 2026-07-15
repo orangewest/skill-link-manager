@@ -61,4 +61,5 @@ export interface AppConfig {
   tool_dirs_checked: Record<string, boolean>;
   skills_checked: Record<string, boolean>;
   language: string;
+  theme: string; // "light" | "dark" | "system"
 }

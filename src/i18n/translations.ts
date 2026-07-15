@@ -46,7 +46,16 @@ export type TranslationKey =
   | "onboardingComplete"
   | "onboardingFinishing"
   | "browse"
-  | "openFolder";
+  | "openFolder"
+  | "theme"
+  | "themeLight"
+  | "themeDark"
+  | "themeSystem"
+  | "confirmDeleteLinks"
+  | "linksRemoved"
+  | "confirm"
+  | "deleteLinks"
+  | "keepLinks";
 
 export const translations: Record<Language, Record<TranslationKey, string>> = {
   zh: {
@@ -96,6 +105,15 @@ export const translations: Record<Language, Record<TranslationKey, string>> = {
     onboardingFinishing: "\u4fdd\u5b58\u4e2d...",
     browse: "\u9009\u62e9\u76ee\u5f55",
     openFolder: "\u6253\u5f00\u76ee\u5f55",
+    theme: "\u4e3b\u9898",
+    themeLight: "\u65e5\u95f4\u6a21\u5f0f",
+    themeDark: "\u591c\u95f4\u6a21\u5f0f",
+    themeSystem: "\u8ddf\u968f\u7cfb\u7edf",
+    confirmDeleteLinks: "\u662f\u5426\u540c\u65f6\u5220\u9664\u8be5\u76ee\u5f55\u4e0b\u5df2\u521b\u5efa\u7684\u94fe\u63a5\uff1f",
+    linksRemoved: "\u5df2\u5220\u9664 {count} \u4e2a\u94fe\u63a5",
+    confirm: "\u786e\u8ba4",
+    deleteLinks: "\u5220\u9664\u94fe\u63a5",
+    keepLinks: "\u4fdd\u7559\u94fe\u63a5",
   },
   en: {
     appTitle: "Skill Link Manager",
@@ -144,5 +162,14 @@ export const translations: Record<Language, Record<TranslationKey, string>> = {
     onboardingFinishing: "Saving...",
     browse: "Browse",
     openFolder: "Open Folder",
+    theme: "Theme",
+    themeLight: "Light",
+    themeDark: "Dark",
+    themeSystem: "System",
+    confirmDeleteLinks: "Also delete the created links in this directory?",
+    linksRemoved: "Removed {count} link(s)",
+    confirm: "Confirm",
+    deleteLinks: "Delete Links",
+    keepLinks: "Keep Links",
   },
 };
