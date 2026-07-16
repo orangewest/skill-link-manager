@@ -304,6 +304,23 @@ fn log(logs: &mut Vec<LogEntry>, level: &str, message: impl Into<String>) {
     });
 }
 
+/// Ensure the shared (central repository) directory exists, creating it
+/// if it is missing. Auto-creating avoids a hard error on first run / after
+/// a config reset, when the default `~/skills` folder has not been made yet.
+/// Mirrors how `apply_links` already auto-creates missing tool directories.
+fn ensure_shared_dir(shared_dir: &Path) -> Result<(), String> {
+    if shared_dir.exists() {
+        return Ok(());
+    }
+    fs::create_dir_all(shared_dir).map_err(|e| {
+        format!(
+            "Failed to create shared directory '{}': {}",
+            shared_dir.display(),
+            e
+        )
+    })
+}
+
 // ============================================================
 //  Skill Description Parsing
 // ============================================================
@@ -458,13 +475,7 @@ fn first_body_line(lines: &[&str]) -> String {
 fn scan_skills() -> Result<Vec<SkillInfo>, String> {
     let config = load_config_internal();
     let shared_dir = PathBuf::from(&config.shared_dir);
-    if !shared_dir.exists() {
-        return Err(format!(
-            "Shared directory does not exist: {}\n\
-             Please create the directory and add skill folders.",
-            shared_dir.display()
-        ));
-    }
+    ensure_shared_dir(&shared_dir)?;
 
     // Only consider tool dirs that are checked (enabled) — unchecked
     // dirs are hidden from the home page skill list and link counts.
@@ -566,12 +577,7 @@ fn apply_links(
 ) -> Result<ApplyResult, String> {
     let config = load_config_internal();
     let shared_dir = PathBuf::from(&config.shared_dir);
-    if !shared_dir.exists() {
-        return Err(format!(
-            "Shared directory does not exist: {}",
-            shared_dir.display()
-        ));
-    }
+    ensure_shared_dir(&shared_dir)?;
 
     let mut logs: Vec<LogEntry> = Vec::new();
     let mut success = 0usize;
@@ -1148,12 +1154,7 @@ fn open_path(path: String) -> Result<(), String> {
 fn get_tool_dir_detail(tool_dir_name: String) -> Result<ToolDirDetail, String> {
     let config = load_config_internal();
     let shared_dir = PathBuf::from(&config.shared_dir);
-    if !shared_dir.exists() {
-        return Err(format!(
-            "Shared directory does not exist: {}",
-            shared_dir.display()
-        ));
-    }
+    ensure_shared_dir(&shared_dir)?;
 
     let tool_dir = config
         .tool_dirs
@@ -1251,12 +1252,7 @@ fn get_tool_dir_detail(tool_dir_name: String) -> Result<ToolDirDetail, String> {
 fn sync_skill(tool_dir_name: String, skill_name: String) -> Result<(), String> {
     let config = load_config_internal();
     let shared_dir = PathBuf::from(&config.shared_dir);
-    if !shared_dir.exists() {
-        return Err(format!(
-            "Central repository directory does not exist: {}",
-            shared_dir.display()
-        ));
-    }
+    ensure_shared_dir(&shared_dir)?;
 
     let tool_dir = config
         .tool_dirs

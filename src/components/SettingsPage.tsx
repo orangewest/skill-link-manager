@@ -25,6 +25,11 @@ export default function SettingsPage({ config, onConfigSaved, onBack, onToolDirC
   const [savedMsg, setSavedMsg] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [infoMsg, setInfoMsg] = useState<string | null>(null);
+  const [redetecting, setRedetecting] = useState(false);
+  // Candidates surfaced by re-detect that are not yet in the config, and
+  // which of them the user has ticked in the selection dialog.
+  const [redetectCandidates, setRedetectCandidates] = useState<ToolDirConfig[]>([]);
+  const [redetectChecked, setRedetectChecked] = useState<Set<string>>(new Set());
 
   // Two-step delete confirmation flow:
   //   1. `deleteTarget` set → show "delete this tool dir?" dialog
@@ -203,6 +208,73 @@ export default function SettingsPage({ config, onConfigSaved, onBack, onToolDirC
     }));
   };
 
+  // Re-scan the computer for installed agent directories. Detected agents
+  // that are not already in the config are shown in a selection dialog so
+  // the user can tick the ones to add, rather than being added silently.
+  const handleRedetect = async () => {
+    setRedetecting(true);
+    setError(null);
+    try {
+      const detected = await invoke<ToolDirConfig[]>("detect_known_agents");
+      const existingNames = new Set(toolDirs.map((td) => td.name));
+      const newOnes = detected.filter((d) => !existingNames.has(d.name));
+      if (newOnes.length === 0) {
+        setInfoMsg(t("redetectNoNew"));
+        setTimeout(() => setInfoMsg(null), 3000);
+      } else {
+        setRedetectCandidates(newOnes);
+        setRedetectChecked(new Set(newOnes.map((d) => d.name)));
+      }
+    } catch (e: unknown) {
+      setError(typeof e === "string" ? e : String(e));
+    } finally {
+      setRedetecting(false);
+    }
+  };
+
+  const handleRedetectToggle = (name: string) => {
+    setRedetectChecked((prev) => {
+      const next = new Set(prev);
+      if (next.has(name)) next.delete(name);
+      else next.add(name);
+      return next;
+    });
+  };
+
+  const closeRedetectDialog = () => {
+    setRedetectCandidates([]);
+    setRedetectChecked(new Set());
+  };
+
+  // Add the ticked candidates, persist (auto-save effect), and re-scan.
+  const handleRedetectConfirm = () => {
+    const selected = redetectCandidates.filter((d) => redetectChecked.has(d.name));
+    if (selected.length === 0) {
+      setInfoMsg(t("redetectAddedNone"));
+    } else {
+      setToolDirs((prev) => [...prev, ...selected]);
+      setToolDirsChecked((prev) => {
+        const next = { ...prev };
+        for (const d of selected) next[d.name] = true;
+        return next;
+      });
+      setInfoMsg(t("redetectAdded", { count: selected.length }));
+    }
+    setTimeout(() => setInfoMsg(null), 3000);
+    closeRedetectDialog();
+  };
+
+  // Close the re-detect selection dialog on ESC.
+  useEffect(() => {
+    if (redetectCandidates.length === 0) return;
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === "Escape") closeRedetectDialog();
+    };
+    document.addEventListener("keydown", handler);
+    return () => document.removeEventListener("keydown", handler);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [redetectCandidates.length]);
+
   // Live duplicate-path check: as soon as the entered path matches an
   // existing tool dir (case-insensitive on Win/macOS, per backend rules),
   // surface the hint and disable the Add button.
@@ -270,8 +342,21 @@ export default function SettingsPage({ config, onConfigSaved, onBack, onToolDirC
 
       {/* Tool dir management */}
       <div>
-        <h3 className="mb-3 text-sm font-semibold text-gray-700 dark:text-gray-300">
-          {t("toolDirManagement")}
+        <h3 className="mb-3 flex items-center justify-between text-sm font-semibold text-gray-700 dark:text-gray-300">
+          <span>{t("toolDirManagement")}</span>
+          <button
+            onClick={handleRedetect}
+            disabled={redetecting}
+            title={t("redetectAgents")}
+            className="flex items-center gap-1 rounded-lg border border-gray-300 px-3 py-1 text-xs font-medium text-gray-600 transition-colors hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={"h-3.5 w-3.5" + (redetecting ? " animate-spin" : "")}>
+              <polyline points="23 4 23 10 17 10" />
+              <polyline points="1 20 1 14 7 14" />
+              <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" />
+            </svg>
+            {redetecting ? t("redetecting") : t("redetectAgents")}
+          </button>
         </h3>
 
         {/* Tool dir list */}
@@ -409,6 +494,61 @@ export default function SettingsPage({ config, onConfigSaved, onBack, onToolDirC
         onConfirm={handleConfirmDeleteLinks}
         onCancel={handleCancelDeleteLinks}
       />
+
+      {/* Re-detect selection dialog: pick which detected agents to add */}
+      {redetectCandidates.length > 0 && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm"
+          onClick={closeRedetectDialog}
+          role="dialog"
+          aria-modal="true"
+        >
+          <div
+            className="flex max-h-[80vh] w-full max-w-sm flex-col rounded-xl border border-gray-200 bg-white p-5 shadow-2xl dark:border-gray-700 dark:bg-gray-800"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 className="mb-1 text-base font-semibold text-gray-800 dark:text-gray-100">
+              {t("redetectTitle")}
+            </h3>
+            <p className="mb-3 text-sm text-gray-600 dark:text-gray-400">
+              {t("redetectSelectHint")}
+            </p>
+            <div className="mb-4 flex-1 space-y-2 overflow-y-auto">
+              {redetectCandidates.map((d) => (
+                <label
+                  key={d.name}
+                  className="flex cursor-pointer items-start gap-2 rounded-lg border border-gray-200 bg-white p-3 dark:border-gray-700 dark:bg-gray-800"
+                >
+                  <input
+                    type="checkbox"
+                    checked={redetectChecked.has(d.name)}
+                    onChange={() => handleRedetectToggle(d.name)}
+                    className="mt-0.5 h-4 w-4 flex-shrink-0 rounded border-gray-300 text-blue-600 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-900"
+                  />
+                  <div className="min-w-0">
+                    <div className="font-medium text-gray-700 dark:text-gray-200">{d.name}</div>
+                    <div className="truncate text-xs text-gray-400 dark:text-gray-500">{d.path}</div>
+                  </div>
+                </label>
+              ))}
+            </div>
+            <div className="flex justify-end gap-2">
+              <button
+                onClick={closeRedetectDialog}
+                className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-100 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700"
+              >
+                {t("cancel")}
+              </button>
+              <button
+                onClick={handleRedetectConfirm}
+                className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700"
+              >
+                {t("addSelected")}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

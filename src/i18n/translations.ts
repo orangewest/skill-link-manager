@@ -75,7 +75,15 @@ export type TranslationKey =
   | "noPublicSkills"
   | "syncSuccess"
   | "alreadyInRepo"
-  | "notPrivateSkill";
+  | "notPrivateSkill"
+  | "redetectAgents"
+  | "redetecting"
+  | "redetectAdded"
+  | "redetectNoNew"
+  | "redetectTitle"
+  | "redetectSelectHint"
+  | "addSelected"
+  | "redetectAddedNone";
 
 export const translations: Record<Language, Record<TranslationKey, string>> = {
   zh: {
@@ -154,6 +162,14 @@ export const translations: Record<Language, Record<TranslationKey, string>> = {
     syncSuccess: "\u5df2\u5c06 '{name}' \u540c\u6b65\u5230\u4e2d\u592e\u4ed3\u5e93",
     alreadyInRepo: "\u4e2d\u592e\u4ed3\u5e93\u4e2d\u5df2\u5b58\u5728\u540c\u540d Skill",
     notPrivateSkill: "\u8be5 Skill \u4e0d\u662f\u79c1\u6709 Skill\uff0c\u65e0\u9700\u540c\u6b65",
+    redetectAgents: "\u91cd\u65b0\u68c0\u6d4b",
+    redetecting: "\u68c0\u6d4b\u4e2d...",
+    redetectAdded: "\u68c0\u6d4b\u5230 {count} \u4e2a\u65b0\u5de5\u5177\u5e76\u6dfb\u52a0",
+    redetectNoNew: "\u6ca1\u6709\u68c0\u6d4b\u5230\u65b0\u7684 agent \u76ee\u5f55",
+    redetectTitle: "\u68c0\u6d4b\u5230\u672a\u6dfb\u52a0\u7684 agent \u76ee\u5f55",
+    redetectSelectHint: "\u52fe\u9009\u8981\u6dfb\u52a0\u7684\u76ee\u5f55\uff0c\u7136\u540e\u70b9\u51fb\u4fdd\u5b58",
+    addSelected: "\u6dfb\u52a0\u9009\u4e2d",
+    redetectAddedNone: "\u672a\u6dfb\u52a0\u4efb\u4f55\u76ee\u5f55",
   },
   en: {
     appTitle: "Skill Link Manager",
@@ -231,5 +247,13 @@ export const translations: Record<Language, Record<TranslationKey, string>> = {
     syncSuccess: "Synced '{name}' to the central repository",
     alreadyInRepo: "A skill with the same name already exists in the central repository",
     notPrivateSkill: "This skill is not private; no sync needed",
+    redetectAgents: "Re-detect",
+    redetecting: "Detecting...",
+    redetectAdded: "Detected and added {count} new agent(s)",
+    redetectNoNew: "No new agent directories detected",
+    redetectTitle: "Detected agent directories not yet added",
+    redetectSelectHint: "Check the directories to add, then click Save.",
+    addSelected: "Add Selected",
+    redetectAddedNone: "No directories were added",
   },
 };
