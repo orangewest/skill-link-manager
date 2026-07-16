@@ -3,16 +3,16 @@ name: Build & Release
 on:
   push:
     tags:
-      - 'v*'                # 推送 v1.0.0, v0.2.3 等标签时自动触发
-  workflow_dispatch:        # 也支持在 GitHub 网页手动触发
+      - 'v*'
+  workflow_dispatch:
 
 permissions:
-  contents: write           # 允许创建 Release 并上传附件
+  contents: write
 
 jobs:
   build:
     strategy:
-      fail-fast: false      # 一个平台失败不影响其他平台继续构建
+      fail-fast: false
       matrix:
         include:
           - platform: macos-latest
@@ -35,7 +35,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0     # 保留完整历史，可用于生成变更日志（可选）
+          fetch-depth: 0
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -50,9 +50,6 @@ jobs:
 
       - name: Cache Rust dependencies
         uses: swatinem/rust-cache@v2
-        # 如果你在 Windows 上遇到缓存保存失败（文件锁问题），可以添加以下行：
-        # with:
-        #   save-if: false
 
       - name: Install Linux system dependencies
         if: matrix.platform == 'ubuntu-22.04'
@@ -71,51 +68,43 @@ jobs:
         uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          # 为 macOS 产物添加基础签名（避免 "app is damaged" 提示）
           APPLE_SIGNING_IDENTITY: ${{ startsWith(matrix.platform, 'macos') && '-' || '' }}
         with:
           tagName: v__VERSION__
-          releaseName: 'Skills Manager v__VERSION__'
+          releaseName: 'skill-link-manager v__VERSION__'
           releaseBody: '自动发布版本 ${{ github.ref_name }}'
           releaseDraft: false
           prerelease: false
           args: --target ${{ matrix.target }}
 
-      # ==================== 新增：打包并上传便携版 ====================
       - name: Package portable executable
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         shell: bash
         run: |
-          
-          APP_NAME="skill-link-manager"               
-          APP_BUNDLE="skill-link-manager.app"          
-
-          # 确定构建产物的位置
+          APP_NAME="skill-link-manager"
+          APP_BUNDLE="skill-link-manager.app"
           TARGET_DIR="src-tauri/target/${{ matrix.target }}/release"
 
           if [ "${{ matrix.platform }}" == "windows-latest" ]; then
             EXE="${APP_NAME}.exe"
             cp "$TARGET_DIR/$EXE" .
-            zip "${APP_NAME}-${{ matrix.label }}.zip" "$EXE"
+            powershell -Command "Compress-Archive -Path '$EXE' -DestinationPath '${APP_NAME}-${{ matrix.label }}.zip'"
             ASSET="${APP_NAME}-${{ matrix.label }}.zip"
           elif [ "${{ matrix.platform }}" == "macos-latest" ]; then
-            # macOS 的 .app 在 bundle/macos/ 下
             BUNDLE_PATH="$TARGET_DIR/bundle/macos/$APP_BUNDLE"
             if [ ! -d "$BUNDLE_PATH" ]; then
-              echo "错误：找不到 .app 包，请检查 APP_BUNDLE 变量是否与 productName 一致"
+              echo "错误：找不到 .app 包，请检查 APP_BUNDLE 是否与 productName 一致"
               exit 1
             fi
             cp -r "$BUNDLE_PATH" .
             zip -r "${APP_NAME}-${{ matrix.label }}.zip" "$APP_BUNDLE"
             ASSET="${APP_NAME}-${{ matrix.label }}.zip"
           else
-            # Linux
             BIN="$APP_NAME"
             cp "$TARGET_DIR/$BIN" .
             tar -czf "${APP_NAME}-${{ matrix.label }}.tar.gz" "$BIN"
             ASSET="${APP_NAME}-${{ matrix.label }}.tar.gz"
           fi
 
-          # 上传到当前 tag 对应的 Release（--clobber 允许覆盖同名文件）
           gh release upload "${{ github.ref_name }}" "$ASSET" --clobber --repo "${{ github.repository }}"
