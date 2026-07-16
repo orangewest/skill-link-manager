@@ -35,10 +35,17 @@ export interface SkillLinkStatus {
   linked: boolean;
 }
 
+export interface PrivateSkill {
+  name: string;
+  path: string;
+  description: string;
+}
+
 export interface ToolDirDetail {
   name: string;
   path: string;
   skills: SkillLinkStatus[];
+  private_skills: PrivateSkill[];
 }
 
 export interface LogEntry {

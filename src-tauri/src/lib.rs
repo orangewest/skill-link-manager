@@ -52,13 +52,25 @@ pub struct SkillLinkStatus {
     pub linked: bool,
 }
 
-/// Detailed view of a tool directory: lists every skill in the shared
-/// directory along with whether it is linked into this tool dir.
+/// A skill that lives directly inside a tool directory (a real folder,
+/// not a link to the central repository). Such skills are "private" to
+/// that tool dir until synced into the central repository.
+#[derive(Serialize, Deserialize, Clone)]
+pub struct PrivateSkill {
+    pub name: String,
+    pub path: String,
+    pub description: String,
+}
+
+/// Detailed view of a tool directory: lists every skill in the central
+/// repository along with whether it is linked into this tool dir, plus the
+/// private (non-linked) skills that live directly inside this tool dir.
 #[derive(Serialize, Deserialize, Clone)]
 pub struct ToolDirDetail {
     pub name: String,
     pub path: String,
     pub skills: Vec<SkillLinkStatus>,
+    pub private_skills: Vec<PrivateSkill>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
@@ -1151,6 +1163,9 @@ fn get_tool_dir_detail(tool_dir_name: String) -> Result<ToolDirDetail, String> {
 
     let tool_dir_path = PathBuf::from(&tool_dir.path);
     let mut skills: Vec<SkillLinkStatus> = Vec::new();
+    // Names of skills that exist in the central repo — used to avoid
+    // listing the same skill twice as a "private" one below.
+    let mut shared_names: std::collections::HashSet<String> = std::collections::HashSet::new();
 
     let entries = fs::read_dir(&shared_dir).map_err(|e| {
         format!(
@@ -1170,6 +1185,7 @@ fn get_tool_dir_detail(tool_dir_name: String) -> Result<ToolDirDetail, String> {
             continue;
         }
         let name = entry.file_name().to_string_lossy().to_string();
+        shared_names.insert(name.clone());
         let skill_source = shared_dir.join(&name);
         let target = tool_dir_path.join(&name);
         let linked = platform::get_link_target(&target)
@@ -1180,11 +1196,128 @@ fn get_tool_dir_detail(tool_dir_name: String) -> Result<ToolDirDetail, String> {
 
     skills.sort_by(|a, b| a.name.to_lowercase().cmp(&b.name.to_lowercase()));
 
+    // --- Private skills: real (non-link) directories inside this tool dir
+    // that are not already present in the central repository. ---
+    let mut private_skills: Vec<PrivateSkill> = Vec::new();
+    if tool_dir_path.exists() {
+        if let Ok(td_entries) = fs::read_dir(&tool_dir_path) {
+            for entry in td_entries.flatten() {
+                let path = entry.path();
+                if !path.is_dir() {
+                    continue;
+                }
+                // Skip any entry that is a link (those are shared skills
+                // already covered by the `skills` list above).
+                if platform::get_link_target(&path).is_ok() {
+                    continue;
+                }
+                let name = entry.file_name().to_string_lossy().to_string();
+                // Skip skills that already exist in the central repository.
+                if shared_names.contains(&name) {
+                    continue;
+                }
+                let description = parse_skill_description(&path);
+                private_skills.push(PrivateSkill {
+                    name,
+                    path: path.to_string_lossy().to_string(),
+                    description,
+                });
+            }
+        }
+    }
+    private_skills.sort_by(|a, b| a.name.to_lowercase().cmp(&b.name.to_lowercase()));
+
     Ok(ToolDirDetail {
         name: tool_dir_name,
         path: tool_dir.path.clone(),
         skills,
+        private_skills,
     })
+}
+
+/// Move a private skill (a real folder living directly in a tool
+/// directory) into the central repository, then replace it in place with
+/// a link pointing back at the repository copy.
+///
+/// Steps:
+///   1. Validate the source is a real (non-link) directory in the tool dir.
+///   2. Refuse if a skill of the same name already exists in the repo.
+///   3. Copy the folder into the central repo, then remove the original.
+///   4. Create a link from the tool dir back to the repo copy.
+///
+/// After this, the skill appears in the tool dir's "public" (linked) list
+/// and is removed from its "private" list.
+#[tauri::command]
+fn sync_skill(tool_dir_name: String, skill_name: String) -> Result<(), String> {
+    let config = load_config_internal();
+    let shared_dir = PathBuf::from(&config.shared_dir);
+    if !shared_dir.exists() {
+        return Err(format!(
+            "Central repository directory does not exist: {}",
+            shared_dir.display()
+        ));
+    }
+
+    let tool_dir = config
+        .tool_dirs
+        .iter()
+        .find(|td| td.name == tool_dir_name)
+        .ok_or_else(|| format!("Unknown tool directory: {}", tool_dir_name))?;
+    let tool_dir_path = PathBuf::from(&tool_dir.path);
+
+    let source = tool_dir_path.join(&skill_name);
+    let dest = shared_dir.join(&skill_name);
+
+    if !source.exists() {
+        return Err(format!("Private skill not found: {}", skill_name));
+    }
+    // Safety: only move real folders. A link is already shared.
+    if platform::get_link_target(&source).is_ok() {
+        return Err(format!(
+            "'{}' is already a link to the central repository; nothing to sync.",
+            skill_name
+        ));
+    }
+    if !source.is_dir() {
+        return Err(format!("'{}' is not a directory; cannot sync.", skill_name));
+    }
+    if dest.exists() {
+        return Err(format!(
+            "A skill named '{}' already exists in the central repository.",
+            skill_name
+        ));
+    }
+
+    // Move = copy into the repo, then remove the original. Using copy+
+    // remove (instead of a single rename) keeps this safe across
+    // filesystems where a cross-device rename would fail.
+    copy_dir_recursive(&source, &dest)
+        .map_err(|e| format!("Failed to copy skill into central repository: {}", e))?;
+    fs::remove_dir_all(&source)
+        .map_err(|e| format!("Failed to remove original skill folder: {}", e))?;
+
+    platform::create_link(&dest, &source)
+        .map_err(|e| format!("Failed to create link after sync: {}", e))?;
+
+    Ok(())
+}
+
+/// Recursively copy a directory tree from `src` to `dst` (which must not
+/// already exist). Used by `sync_skill` to move a skill folder into the
+/// central repository across any filesystem.
+fn copy_dir_recursive(src: &Path, dst: &Path) -> std::io::Result<()> {
+    fs::create_dir_all(dst)?;
+    for entry in fs::read_dir(src)? {
+        let entry = entry?;
+        let entry_path = entry.path();
+        let dest_path = dst.join(entry.file_name());
+        if entry_path.is_dir() {
+            copy_dir_recursive(&entry_path, &dest_path)?;
+        } else {
+            fs::copy(&entry_path, &dest_path)?;
+        }
+    }
+    Ok(())
 }
 
 // ============================================================
@@ -1211,6 +1344,7 @@ pub fn run() {
             check_path_exists,
             open_path,
             get_tool_dir_detail,
+            sync_skill,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

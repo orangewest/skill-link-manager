@@ -64,7 +64,18 @@ export type TranslationKey =
   | "deleteSkillFinalTitle"
   | "deleteSkillFinalBody"
   | "deleting"
-  | "deleteSkillSuccess";
+  | "deleteSkillSuccess"
+  | "publicSkills"
+  | "privateSkills"
+  | "privateSkillsHint"
+  | "syncSkill"
+  | "syncing"
+  | "searchInToolDir"
+  | "noPrivateSkills"
+  | "noPublicSkills"
+  | "syncSuccess"
+  | "alreadyInRepo"
+  | "notPrivateSkill";
 
 export const translations: Record<Language, Record<TranslationKey, string>> = {
   zh: {
@@ -74,7 +85,7 @@ export const translations: Record<Language, Record<TranslationKey, string>> = {
     back: "\u8fd4\u56de",
     home: "\u9996\u9875",
     searchPlaceholder: "\u641c\u7d22 Skill...",
-    noSkills: "\u5171\u4eab\u76ee\u5f55\u4e2d\u6ca1\u6709\u627e\u5230 Skill\u3002",
+    noSkills: "\u4e2d\u592e\u4ed3\u5e93\u76ee\u5f55\u4e2d\u6ca1\u6709\u627e\u5230 Skill\u3002",
     noSearchResults: "\u6ca1\u6709\u5339\u914d\u7684 Skill\u3002",
     unlinked: "\u672a\u94fe\u63a5",
     linkedCount: "{linked}/{total} \u5df2\u94fe\u63a5",
@@ -84,8 +95,8 @@ export const translations: Record<Language, Record<TranslationKey, string>> = {
     linkedStatus: "\u5df2\u94fe\u63a5",
     unlinkedStatus: "\u672a\u94fe\u63a5",
     settingsTitle: "\u8bbe\u7f6e",
-    sharedDirConfig: "\u4e3b Skill \u76ee\u5f55",
-    sharedDirPlaceholder: "\u8f93\u5165\u5171\u4eab\u76ee\u5f55\u8def\u5f84",
+    sharedDirConfig: "\u4e2d\u592e\u4ed3\u5e93\u76ee\u5f55",
+    sharedDirPlaceholder: "\u8f93\u5165\u4e2d\u592e\u4ed3\u5e93\u76ee\u5f55\u8def\u5f84",
     save: "\u4fdd\u5b58",
     saved: "\u5df2\u4fdd\u5b58",
     toolDirManagement: "\u5de5\u5177\u76ee\u5f55\u7ba1\u7406",
@@ -104,7 +115,7 @@ export const translations: Record<Language, Record<TranslationKey, string>> = {
     clickToViewDetail: "\u70b9\u51fb\u67e5\u770b\u8be6\u60c5",
     onboardingTitle: "\u521d\u59cb\u8bbe\u7f6e",
     onboardingWelcome: "\u6b22\u8fce\u4f7f\u7528 Skill Link Manager\uff0c\u8bf7\u5b8c\u6210\u4ee5\u4e0b\u521d\u59cb\u914d\u7f6e\u3002",
-    onboardingSharedDirHint: "\u8be5\u76ee\u5f55\u7528\u4e8e\u5b58\u653e\u6240\u6709\u5171\u4eab\u7684 Skill \u6587\u4ef6\u5939\u3002",
+    onboardingSharedDirHint: "\u8be5\u76ee\u5f55\u4f5c\u4e3a\u4e2d\u592e\u4ed3\u5e93\uff0c\u7528\u4e8e\u5b58\u653e\u6240\u6709\u5171\u4eab\u7684 Skill \u6587\u4ef6\u5939\u3002",
     dirExists: "\u76ee\u5f55\u5df2\u5b58\u5728",
     dirNotExists: "\u76ee\u5f55\u4e0d\u5b58\u5728\uff08\u5e94\u7528\u65f6\u5c06\u81ea\u52a8\u521b\u5efa\uff09",
     onboardingDetected: "\u68c0\u6d4b\u5230\u4ee5\u4e0b\u5df2\u5b89\u88c5\u7684\u5de5\u5177\uff0c\u9884\u52fe\u9009\u53ef\u53d6\u6d88\u52fe\u9009\uff1a",
@@ -126,12 +137,23 @@ export const translations: Record<Language, Record<TranslationKey, string>> = {
     pathExists: "\u8be5\u8def\u5f84\u5df2\u5b58\u5728",
     refresh: "\u5237\u65b0",
     deleteSkill: "\u5220\u9664 Skill",
-    deleteSkillConfirmBody: "\u6b64\u64cd\u4f5c\u5c06\u89e3\u9664\u8be5 Skill \u5728\u6240\u6709\u5de5\u5177\u76ee\u5f55\u4e2d\u7684\u94fe\u63a5\uff0c\u5e76\u6c38\u4e45\u5220\u9664\u5171\u4eab\u76ee\u5f55\u4e0b\u7684 Skill \u6587\u4ef6\u5939\u3002\u6b64\u64cd\u4f5c\u4e0d\u53ef\u64a4\u9500\u3002",
+    deleteSkillConfirmBody: "\u6b64\u64cd\u4f5c\u5c06\u89e3\u9664\u8be5 Skill \u5728\u6240\u6709\u5de5\u5177\u76ee\u5f55\u4e2d\u7684\u94fe\u63a5\uff0c\u5e76\u6c38\u4e45\u5220\u9664\u4e2d\u592e\u4ed3\u5e93\u76ee\u5f55\u4e0b\u7684 Skill \u6587\u4ef6\u5939\u3002\u6b64\u64cd\u4f5c\u4e0d\u53ef\u64a4\u9500\u3002",
     continueButton: "\u7ee7\u7eed",
     deleteSkillFinalTitle: "\u786e\u8ba4\u5220\u9664",
     deleteSkillFinalBody: "\u8bf7\u8f93\u5165 Skill \u540d\u79f0\u4ee5\u786e\u8ba4\u6c38\u4e45\u5220\u9664\uff1a",
     deleting: "\u5220\u9664\u4e2d...",
     deleteSkillSuccess: "\u5df2\u5220\u9664 Skill '{name}'\uff0c\u5e76\u89e3\u9664 {count} \u4e2a\u94fe\u63a5",
+    publicSkills: "\u516c\u5171 Skill",
+    privateSkills: "\u79c1\u6709 Skill",
+    privateSkillsHint: "\u672c\u76ee\u5f55\u72ec\u6709\u7684\u3001\u5c1a\u672a\u540c\u6b65\u5230\u4e2d\u592e\u4ed3\u5e93\u7684 Skill\u3002",
+    syncSkill: "\u540c\u6b65\u5230\u4e2d\u592e\u4ed3\u5e93",
+    syncing: "\u540c\u6b65\u4e2d...",
+    searchInToolDir: "\u641c\u7d22\u672c\u76ee\u5f55\u7684 Skill...",
+    noPrivateSkills: "\u6ca1\u6709\u79c1\u6709 Skill\u3002",
+    noPublicSkills: "\u4e2d\u592e\u4ed3\u5e93\u4e2d\u6ca1\u6709\u53ef\u94fe\u63a5\u7684 Skill\u3002",
+    syncSuccess: "\u5df2\u5c06 '{name}' \u540c\u6b65\u5230\u4e2d\u592e\u4ed3\u5e93",
+    alreadyInRepo: "\u4e2d\u592e\u4ed3\u5e93\u4e2d\u5df2\u5b58\u5728\u540c\u540d Skill",
+    notPrivateSkill: "\u8be5 Skill \u4e0d\u662f\u79c1\u6709 Skill\uff0c\u65e0\u9700\u540c\u6b65",
   },
   en: {
     appTitle: "Skill Link Manager",
@@ -140,7 +162,7 @@ export const translations: Record<Language, Record<TranslationKey, string>> = {
     back: "Back",
     home: "Home",
     searchPlaceholder: "Search skills...",
-    noSkills: "No skills found in the shared directory.",
+    noSkills: "No skills found in the central repository directory.",
     noSearchResults: "No skills match your search.",
     unlinked: "unlinked",
     linkedCount: "{linked}/{total} linked",
@@ -150,8 +172,8 @@ export const translations: Record<Language, Record<TranslationKey, string>> = {
     linkedStatus: "Linked",
     unlinkedStatus: "Not Linked",
     settingsTitle: "Settings",
-    sharedDirConfig: "Shared Skill Directory",
-    sharedDirPlaceholder: "Enter shared directory path",
+    sharedDirConfig: "Central Repository Directory",
+    sharedDirPlaceholder: "Enter central repository directory path",
     save: "Save",
     saved: "Saved",
     toolDirManagement: "Tool Directory Management",
@@ -170,7 +192,7 @@ export const translations: Record<Language, Record<TranslationKey, string>> = {
     clickToViewDetail: "Click to view detail",
     onboardingTitle: "Initial Setup",
     onboardingWelcome: "Welcome to Skill Link Manager. Please complete the initial setup below.",
-    onboardingSharedDirHint: "This directory stores all shared skill folders.",
+    onboardingSharedDirHint: "This directory acts as the central repository storing all shared skill folders.",
     dirExists: "Directory exists",
     dirNotExists: "Directory does not exist (will be created on apply)",
     onboardingDetected: "Detected the following installed tools (pre-selected, you can uncheck):",
@@ -192,11 +214,22 @@ export const translations: Record<Language, Record<TranslationKey, string>> = {
     pathExists: "Path already exists",
     refresh: "Refresh",
     deleteSkill: "Delete Skill",
-    deleteSkillConfirmBody: "This will unlink the skill from all tool directories and permanently delete its folder in the shared directory. This action cannot be undone.",
+    deleteSkillConfirmBody: "This will unlink the skill from all tool directories and permanently delete its folder in the central repository directory. This action cannot be undone.",
     continueButton: "Continue",
     deleteSkillFinalTitle: "Confirm Deletion",
     deleteSkillFinalBody: "Type the skill name to confirm permanent deletion:",
     deleting: "Deleting...",
     deleteSkillSuccess: "Deleted skill '{name}' and removed {count} link(s)",
+    publicSkills: "Public Skills",
+    privateSkills: "Private Skills",
+    privateSkillsHint: "Skills unique to this directory that are not yet synced to the central repository.",
+    syncSkill: "Sync to Repository",
+    syncing: "Syncing...",
+    searchInToolDir: "Search skills in this directory...",
+    noPrivateSkills: "No private skills.",
+    noPublicSkills: "No linkable skills in the central repository.",
+    syncSuccess: "Synced '{name}' to the central repository",
+    alreadyInRepo: "A skill with the same name already exists in the central repository",
+    notPrivateSkill: "This skill is not private; no sync needed",
   },
 };

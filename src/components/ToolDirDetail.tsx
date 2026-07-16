@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo, type ReactNode } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import type { ToolDirDetail as ToolDirDetailType } from "../types";
 import { useI18n } from "../i18n/I18nContext";
@@ -8,12 +8,58 @@ interface Props {
   onBack: () => void;
 }
 
+/** Collapsible section header with a rotating chevron. */
+function SectionHeader({
+  title,
+  count,
+  expanded,
+  onToggle,
+  right,
+}: {
+  title: string;
+  count: number;
+  expanded: boolean;
+  onToggle: () => void;
+  right?: ReactNode;
+}) {
+  return (
+    <div className="mb-3 flex items-center justify-between gap-2">
+      <button
+        onClick={onToggle}
+        className="flex flex-1 items-center gap-2 text-left text-sm font-semibold text-gray-700 transition-colors hover:text-gray-900 dark:text-gray-300 dark:hover:text-gray-100"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          className={"h-4 w-4 flex-shrink-0 transition-transform " + (expanded ? "rotate-90" : "")}
+        >
+          <polyline points="9 18 15 12 9 6" />
+        </svg>
+        <span>{title}</span>
+        <span className="rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-500 dark:bg-gray-700 dark:text-gray-300">
+          {count}
+        </span>
+      </button>
+      {right}
+    </div>
+  );
+}
+
 export default function ToolDirDetail({ toolDirName, onBack }: Props) {
   const { t } = useI18n();
   const [detail, setDetail] = useState<ToolDirDetailType | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
+  const [search, setSearch] = useState("");
+  const [publicExpanded, setPublicExpanded] = useState(true);
+  const [privateExpanded, setPrivateExpanded] = useState(false);
+  const [infoMsg, setInfoMsg] = useState<string | null>(null);
 
   const loadDetail = useCallback(async () => {
     setLoading(true);
@@ -31,6 +77,19 @@ export default function ToolDirDetail({ toolDirName, onBack }: Props) {
   useEffect(() => {
     loadDetail();
   }, [loadDetail]);
+
+  // --- Search filtering ---
+  const query = search.trim().toLowerCase();
+  const filteredPublic = useMemo(() => {
+    if (!detail) return [];
+    if (!query) return detail.skills;
+    return detail.skills.filter((s) => s.name.toLowerCase().includes(query));
+  }, [detail, query]);
+  const filteredPrivate = useMemo(() => {
+    if (!detail) return [];
+    if (!query) return detail.private_skills;
+    return detail.private_skills.filter((s) => s.name.toLowerCase().includes(query));
+  }, [detail, query]);
 
   const handleToggleLink = async (skillName: string, currentlyLinked: boolean) => {
     setActionLoading(skillName);
@@ -62,6 +121,29 @@ export default function ToolDirDetail({ toolDirName, onBack }: Props) {
       await loadDetail();
     } catch (e: unknown) {
       setError(typeof e === "string" ? e : String(e));
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const handleSync = async (skillName: string) => {
+    setActionLoading(`sync-${skillName}`);
+    setError(null);
+    setInfoMsg(null);
+    try {
+      await invoke("sync_skill", { toolDirName, skillName });
+      await loadDetail();
+      setInfoMsg(t("syncSuccess", { name: skillName }));
+      setTimeout(() => setInfoMsg(null), 3000);
+    } catch (e: unknown) {
+      const raw = typeof e === "string" ? e : String(e);
+      if (raw.includes("already exists in the central repository")) {
+        setError(t("alreadyInRepo"));
+      } else if (raw.includes("already a link")) {
+        setError(t("notPrivateSkill"));
+      } else {
+        setError(raw);
+      }
     } finally {
       setActionLoading(null);
     }
@@ -117,58 +199,134 @@ export default function ToolDirDetail({ toolDirName, onBack }: Props) {
         </div>
       )}
 
+      {/* Success message (e.g. sync) */}
+      {infoMsg && (
+        <div className="mb-4 rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700 dark:border-green-800 dark:bg-green-900/30 dark:text-green-300">
+          {infoMsg}
+        </div>
+      )}
+
       {/* Tool dir header */}
       <div className="mb-6">
         <h2 className="text-xl font-bold text-gray-800 dark:text-gray-100">{detail.name}</h2>
         <p className="mt-1 break-all text-sm text-gray-500 dark:text-gray-400">{detail.path}</p>
       </div>
 
-      {/* Link all */}
-      <div className="mb-4">
-        <button
-          onClick={handleLinkAll}
-          disabled={actionLoading === "all" || detail.skills.length === 0}
-          className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-gray-300 dark:disabled:bg-gray-700"
-        >
-          {actionLoading === "all" ? t("applying") : t("linkAll")}
-        </button>
+      {/* Search */}
+      <div className="mb-6">
+        <input
+          type="text"
+          placeholder={t("searchInToolDir")}
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm focus:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
+        />
       </div>
 
-      {/* Skill list */}
-      {detail.skills.length === 0 ? (
-        <p className="py-6 text-center text-sm text-gray-400 dark:text-gray-500">{t("noSkills")}</p>
-      ) : (
-        <div className="space-y-2">
-          {detail.skills.map((skill) => (
-            <div
-              key={skill.name}
-              className="flex items-center justify-between rounded-lg border border-gray-200 bg-white p-3 dark:border-gray-700 dark:bg-gray-800"
+      {/* ===== Public skills section (expanded by default) ===== */}
+      <div className="mb-6 rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800">
+        <SectionHeader
+          title={t("publicSkills")}
+          count={detail.skills.length}
+          expanded={publicExpanded}
+          onToggle={() => setPublicExpanded((v) => !v)}
+          right={
+            <button
+              onClick={handleLinkAll}
+              disabled={
+                actionLoading === "all" ||
+                detail.skills.length === 0 ||
+                !publicExpanded
+              }
+              className="rounded-lg bg-blue-600 px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-gray-300 dark:disabled:bg-gray-700"
             >
-              <div className="min-w-0 flex-1">
-                <div className="font-medium text-gray-700 dark:text-gray-200">{skill.name}</div>
-              </div>
-              <div className="flex flex-shrink-0 items-center gap-2">
-                {skill.linked ? (
-                  <span className="rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-700 dark:bg-green-900 dark:text-green-300">
-                    {t("linkedStatus")}
-                  </span>
-                ) : (
-                  <span className="rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-500 dark:bg-gray-700 dark:text-gray-300">
-                    {t("unlinkedStatus")}
-                  </span>
-                )}
-                <input
-                  type="checkbox"
-                  checked={skill.linked}
-                  disabled={actionLoading === skill.name}
-                  onChange={() => handleToggleLink(skill.name, skill.linked)}
-                  className="h-4 w-4 flex-shrink-0 rounded border-gray-300 text-blue-600 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-900"
-                />
-              </div>
+              {actionLoading === "all" ? t("applying") : t("linkAll")}
+            </button>
+          }
+        />
+        {publicExpanded && (
+          filteredPublic.length === 0 ? (
+            <p className="py-4 text-center text-sm text-gray-400 dark:text-gray-500">
+              {query ? t("noSearchResults") : t("noPublicSkills")}
+            </p>
+          ) : (
+            <div className="space-y-2">
+              {filteredPublic.map((skill) => (
+                <div
+                  key={skill.name}
+                  className="flex items-center justify-between rounded-lg border border-gray-100 bg-white p-3 dark:border-gray-700 dark:bg-gray-800"
+                >
+                  <div className="min-w-0 flex-1">
+                    <div className="font-medium text-gray-700 dark:text-gray-200">{skill.name}</div>
+                  </div>
+                  <div className="flex flex-shrink-0 items-center gap-2">
+                    {skill.linked ? (
+                      <span className="rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-700 dark:bg-green-900 dark:text-green-300">
+                        {t("linkedStatus")}
+                      </span>
+                    ) : (
+                      <span className="rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-500 dark:bg-gray-700 dark:text-gray-300">
+                        {t("unlinkedStatus")}
+                      </span>
+                    )}
+                    <input
+                      type="checkbox"
+                      checked={skill.linked}
+                      disabled={actionLoading === skill.name}
+                      onChange={() => handleToggleLink(skill.name, skill.linked)}
+                      className="h-4 w-4 flex-shrink-0 rounded border-gray-300 text-blue-600 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-900"
+                    />
+                  </div>
+                </div>
+              ))}
             </div>
-          ))}
-        </div>
-      )}
+          )
+        )}
+      </div>
+
+      {/* ===== Private skills section (collapsed by default) ===== */}
+      <div className="rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800">
+        <SectionHeader
+          title={t("privateSkills")}
+          count={detail.private_skills.length}
+          expanded={privateExpanded}
+          onToggle={() => setPrivateExpanded((v) => !v)}
+        />
+        {privateExpanded && (
+          <>
+            <p className="mb-3 text-xs text-gray-500 dark:text-gray-400">{t("privateSkillsHint")}</p>
+            {filteredPrivate.length === 0 ? (
+              <p className="py-4 text-center text-sm text-gray-400 dark:text-gray-500">
+                {query ? t("noSearchResults") : t("noPrivateSkills")}
+              </p>
+            ) : (
+              <div className="space-y-2">
+                {filteredPrivate.map((skill) => (
+                  <div
+                    key={skill.name}
+                    className="flex items-center justify-between gap-2 rounded-lg border border-gray-100 bg-white p-3 dark:border-gray-700 dark:bg-gray-800"
+                  >
+                    <div className="min-w-0 flex-1">
+                      <div className="font-medium text-gray-700 dark:text-gray-200">{skill.name}</div>
+                      <p className="mt-0.5 line-clamp-1 text-xs text-gray-400 dark:text-gray-500">
+                        {skill.description || "\u2014"}
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => handleSync(skill.name)}
+                      disabled={actionLoading === `sync-${skill.name}`}
+                      title={t("syncSkill")}
+                      className="flex-shrink-0 rounded bg-green-600 px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-green-700 disabled:cursor-not-allowed disabled:bg-gray-300 dark:disabled:bg-gray-700"
+                    >
+                      {actionLoading === `sync-${skill.name}` ? t("syncing") : t("syncSkill")}
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </>
+        )}
+      </div>
     </div>
   );
 }
