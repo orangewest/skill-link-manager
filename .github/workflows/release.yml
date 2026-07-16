@@ -1,0 +1,82 @@
+name: Build & Release
+
+on:
+  push:
+    tags:
+      - 'v*'                # 推送 v1.0.0, v0.2.3 等标签时自动触发
+  workflow_dispatch:        # 也支持在 GitHub 网页手动触发
+
+permissions:
+  contents: write           # 允许创建 Release 并上传附件
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false      # 一个平台失败不影响其他平台继续构建
+      matrix:
+        include:
+          - platform: macos-latest
+            target: aarch64-apple-darwin
+            label: macOS-arm64
+          - platform: macos-latest
+            target: x86_64-apple-darwin
+            label: macOS-x64
+          - platform: ubuntu-22.04
+            target: x86_64-unknown-linux-gnu
+            label: Linux-x64
+          - platform: windows-latest
+            target: x86_64-pc-windows-msvc
+            label: Windows-x64
+
+    runs-on: ${{ matrix.platform }}
+    name: Build (${{ matrix.label }})
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0     # 保留完整历史，可用于生成变更日志（可选）
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Setup Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+
+      - name: Cache Rust dependencies
+        uses: swatinem/rust-cache@v2
+        # 如果你在 Windows 上遇到缓存保存失败（文件锁问题），可以添加以下行：
+        # with:
+        #   save-if: false
+
+      - name: Install Linux system dependencies
+        if: matrix.platform == 'ubuntu-22.04'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libwebkit2gtk-4.1-dev \
+            libappindicator3-dev \
+            librsvg2-dev \
+            patchelf
+
+      - name: Install frontend dependencies
+        run: npm ci
+
+      - name: Build and release with Tauri
+        uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # 为 macOS 产物添加基础签名（避免 "app is damaged" 提示）
+          APPLE_SIGNING_IDENTITY: ${{ startsWith(matrix.platform, 'macos') && '-' || '' }}
+        with:
+          tagName: v__VERSION__
+          releaseName: 'Skills Manager v__VERSION__'
+          releaseBody: '自动发布版本 ${{ github.ref_name }}'
+          releaseDraft: false
+          prerelease: false
+          args: --target ${{ matrix.target }}
