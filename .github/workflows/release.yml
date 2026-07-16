@@ -80,3 +80,42 @@ jobs:
           releaseDraft: false
           prerelease: false
           args: --target ${{ matrix.target }}
+
+      # ==================== 新增：打包并上传便携版 ====================
+      - name: Package portable executable
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: bash
+        run: |
+          
+          APP_NAME="skill-link-manager"               
+          APP_BUNDLE="skill-link-manager.app"          
+
+          # 确定构建产物的位置
+          TARGET_DIR="src-tauri/target/${{ matrix.target }}/release"
+
+          if [ "${{ matrix.platform }}" == "windows-latest" ]; then
+            EXE="${APP_NAME}.exe"
+            cp "$TARGET_DIR/$EXE" .
+            zip "${APP_NAME}-${{ matrix.label }}.zip" "$EXE"
+            ASSET="${APP_NAME}-${{ matrix.label }}.zip"
+          elif [ "${{ matrix.platform }}" == "macos-latest" ]; then
+            # macOS 的 .app 在 bundle/macos/ 下
+            BUNDLE_PATH="$TARGET_DIR/bundle/macos/$APP_BUNDLE"
+            if [ ! -d "$BUNDLE_PATH" ]; then
+              echo "错误：找不到 .app 包，请检查 APP_BUNDLE 变量是否与 productName 一致"
+              exit 1
+            fi
+            cp -r "$BUNDLE_PATH" .
+            zip -r "${APP_NAME}-${{ matrix.label }}.zip" "$APP_BUNDLE"
+            ASSET="${APP_NAME}-${{ matrix.label }}.zip"
+          else
+            # Linux
+            BIN="$APP_NAME"
+            cp "$TARGET_DIR/$BIN" .
+            tar -czf "${APP_NAME}-${{ matrix.label }}.tar.gz" "$BIN"
+            ASSET="${APP_NAME}-${{ matrix.label }}.tar.gz"
+          fi
+
+          # 上传到当前 tag 对应的 Release（--clobber 允许覆盖同名文件）
+          gh release upload "${{ github.ref_name }}" "$ASSET" --clobber --repo "${{ github.repository }}"
