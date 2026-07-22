@@ -4,8 +4,47 @@ import type { AppConfig, ToolDirConfig } from "../types";
 import { useI18n } from "../i18n/I18nContext";
 import PathInput from "./PathInput";
 import ConfirmDialog from "./ConfirmDialog";
+import Modal from "./Modal";
+import Tooltip from "./Tooltip";
 import { useAutoName } from "../hooks/useAutoName";
 import { pathsEqual } from "../utils/path";
+import CheckboxIcon from "./CheckboxIcon";
+
+/** Small inline pencil (edit) icon. */
+function EditIcon() {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className="h-4 w-4"
+    >
+      <path d="M12 20h9M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" />
+    </svg>
+  );
+}
+
+/** Small inline trash (delete) icon. */
+function TrashIcon() {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className="h-4 w-4"
+    >
+      <path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m2 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" />
+    </svg>
+  );
+}
 
 interface Props {
   config: AppConfig;
@@ -208,6 +247,19 @@ export default function SettingsPage({ config, onConfigSaved, onBack, onToolDirC
     }));
   };
 
+  // Toggle every tool dir's checked state at once (icon button in the header).
+  const allToolDirsChecked =
+    toolDirs.length > 0 &&
+    toolDirs.every((td) => toolDirsChecked[td.name] ?? true);
+  const handleToggleAllToolDirs = () => {
+    const nextVal = !allToolDirsChecked;
+    setToolDirsChecked((prev) => {
+      const next = { ...prev };
+      for (const td of toolDirs) next[td.name] = nextVal;
+      return next;
+    });
+  };
+
   // Re-scan the computer for installed agent directories. Detected agents
   // that are not already in the config are shown in a selection dialog so
   // the user can tick the ones to add, rather than being added silently.
@@ -263,17 +315,6 @@ export default function SettingsPage({ config, onConfigSaved, onBack, onToolDirC
     setTimeout(() => setInfoMsg(null), 3000);
     closeRedetectDialog();
   };
-
-  // Close the re-detect selection dialog on ESC.
-  useEffect(() => {
-    if (redetectCandidates.length === 0) return;
-    const handler = (e: KeyboardEvent) => {
-      if (e.key === "Escape") closeRedetectDialog();
-    };
-    document.addEventListener("keydown", handler);
-    return () => document.removeEventListener("keydown", handler);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [redetectCandidates.length]);
 
   // Live duplicate-path check: as soon as the entered path matches an
   // existing tool dir (case-insensitive on Win/macOS, per backend rules),
@@ -344,19 +385,33 @@ export default function SettingsPage({ config, onConfigSaved, onBack, onToolDirC
       <div>
         <h3 className="mb-3 flex items-center justify-between text-sm font-semibold text-gray-700 dark:text-gray-300">
           <span>{t("toolDirManagement")}</span>
-          <button
-            onClick={handleRedetect}
-            disabled={redetecting}
-            title={t("redetectAgents")}
-            className="flex items-center gap-1 rounded-lg border border-gray-300 px-3 py-1 text-xs font-medium text-gray-600 transition-colors hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={"h-3.5 w-3.5" + (redetecting ? " animate-spin" : "")}>
-              <polyline points="23 4 23 10 17 10" />
-              <polyline points="1 20 1 14 7 14" />
-              <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" />
-            </svg>
-            {redetecting ? t("redetecting") : t("redetectAgents")}
-          </button>
+          <div className="flex items-center gap-2">
+            <Tooltip text={allToolDirsChecked ? t("selectNone") : t("selectAll")}>
+              <button
+                onClick={handleToggleAllToolDirs}
+                disabled={toolDirs.length === 0}
+                aria-label={allToolDirsChecked ? t("selectNone") : t("selectAll")}
+                className="rounded-lg border border-gray-300 p-1.5 text-gray-600 transition-colors hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700"
+              >
+                <CheckboxIcon checked={allToolDirsChecked} className="h-3.5 w-3.5" />
+              </button>
+            </Tooltip>
+            <Tooltip text={t("redetectAgents")}>
+              <button
+                onClick={handleRedetect}
+                disabled={redetecting}
+                aria-label={t("redetectAgents")}
+                className="flex items-center gap-1 rounded-lg border border-gray-300 px-3 py-1 text-xs font-medium text-gray-600 transition-colors hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={"h-3.5 w-3.5" + (redetecting ? " animate-spin" : "")}>
+                  <polyline points="23 4 23 10 17 10" />
+                  <polyline points="1 20 1 14 7 14" />
+                  <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" />
+                </svg>
+                {redetecting ? t("redetecting") : t("redetectAgents")}
+              </button>
+            </Tooltip>
+          </div>
         </h3>
 
         {/* Tool dir list */}
@@ -403,26 +458,33 @@ export default function SettingsPage({ config, onConfigSaved, onBack, onToolDirC
                 </>
               ) : (
                 <>
-                  <div
-                    className="min-w-0 flex-1 cursor-pointer"
-                    onClick={() => onToolDirClick(td.name)}
-                    title={t("clickToViewDetail")}
-                  >
-                    <div className="font-medium text-gray-700 hover:text-blue-600 dark:text-gray-200 dark:hover:text-blue-400">{td.name}</div>
-                    <div className="truncate text-xs text-gray-400 dark:text-gray-500">{td.path}</div>
-                  </div>
-                  <button
-                    onClick={() => handleStartEdit(index)}
-                    className="flex-shrink-0 text-sm text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
-                  >
-                    {t("edit")}
-                  </button>
-                  <button
-                    onClick={() => handleDeleteToolDir(index)}
-                    className="flex-shrink-0 text-sm text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300"
-                  >
-                    {t("delete")}
-                  </button>
+                  <Tooltip text={t("clickToViewDetail")} className="min-w-0 flex-1">
+                    <div
+                      className="cursor-pointer"
+                      onClick={() => onToolDirClick(td.name)}
+                    >
+                      <div className="font-medium text-gray-700 hover:text-blue-600 dark:text-gray-200 dark:hover:text-blue-400">{td.name}</div>
+                      <div className="truncate text-xs text-gray-400 dark:text-gray-500">{td.path}</div>
+                    </div>
+                  </Tooltip>
+                  <Tooltip text={t("edit")}>
+                    <button
+                      onClick={() => handleStartEdit(index)}
+                      aria-label={t("edit")}
+                      className="flex-shrink-0 rounded p-1.5 text-gray-500 transition-colors hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700"
+                    >
+                      <EditIcon />
+                    </button>
+                  </Tooltip>
+                  <Tooltip text={t("delete")}>
+                    <button
+                      onClick={() => handleDeleteToolDir(index)}
+                      aria-label={t("delete")}
+                      className="flex-shrink-0 rounded p-1.5 text-red-500 transition-colors hover:bg-red-100 dark:text-red-400 dark:hover:bg-red-900/40"
+                    >
+                      <TrashIcon />
+                    </button>
+                  </Tooltip>
                 </>
               )}
             </div>
@@ -496,59 +558,53 @@ export default function SettingsPage({ config, onConfigSaved, onBack, onToolDirC
       />
 
       {/* Re-detect selection dialog: pick which detected agents to add */}
-      {redetectCandidates.length > 0 && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm"
-          onClick={closeRedetectDialog}
-          role="dialog"
-          aria-modal="true"
-        >
-          <div
-            className="flex max-h-[80vh] w-full max-w-sm flex-col rounded-xl border border-gray-200 bg-white p-5 shadow-2xl dark:border-gray-700 dark:bg-gray-800"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <h3 className="mb-1 text-base font-semibold text-gray-800 dark:text-gray-100">
-              {t("redetectTitle")}
-            </h3>
-            <p className="mb-3 text-sm text-gray-600 dark:text-gray-400">
-              {t("redetectSelectHint")}
-            </p>
-            <div className="mb-4 flex-1 space-y-2 overflow-y-auto">
-              {redetectCandidates.map((d) => (
-                <label
-                  key={d.name}
-                  className="flex cursor-pointer items-start gap-2 rounded-lg border border-gray-200 bg-white p-3 dark:border-gray-700 dark:bg-gray-800"
-                >
-                  <input
-                    type="checkbox"
-                    checked={redetectChecked.has(d.name)}
-                    onChange={() => handleRedetectToggle(d.name)}
-                    className="mt-0.5 h-4 w-4 flex-shrink-0 rounded border-gray-300 text-blue-600 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-900"
-                  />
-                  <div className="min-w-0">
-                    <div className="font-medium text-gray-700 dark:text-gray-200">{d.name}</div>
-                    <div className="truncate text-xs text-gray-400 dark:text-gray-500">{d.path}</div>
-                  </div>
-                </label>
-              ))}
-            </div>
-            <div className="flex justify-end gap-2">
-              <button
-                onClick={closeRedetectDialog}
-                className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-100 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700"
+      <Modal
+        size="sm"
+        open={redetectCandidates.length > 0}
+        title={t("redetectTitle")}
+        onClose={closeRedetectDialog}
+        footer={
+          <>
+            <button
+              onClick={closeRedetectDialog}
+              className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-100 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700"
+            >
+              {t("cancel")}
+            </button>
+            <button
+              onClick={handleRedetectConfirm}
+              className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700"
+            >
+              {t("addSelected")}
+            </button>
+          </>
+        }
+      >
+        <div className="flex max-h-[60vh] flex-col">
+          <p className="mb-3 text-sm text-gray-600 dark:text-gray-400">
+            {t("redetectSelectHint")}
+          </p>
+          <div className="flex-1 space-y-2 overflow-y-auto pr-1">
+            {redetectCandidates.map((d) => (
+              <label
+                key={d.name}
+                className="flex cursor-pointer items-start gap-2 rounded-lg border border-gray-200 bg-white p-3 dark:border-gray-700 dark:bg-gray-800"
               >
-                {t("cancel")}
-              </button>
-              <button
-                onClick={handleRedetectConfirm}
-                className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700"
-              >
-                {t("addSelected")}
-              </button>
-            </div>
+                <input
+                  type="checkbox"
+                  checked={redetectChecked.has(d.name)}
+                  onChange={() => handleRedetectToggle(d.name)}
+                  className="mt-0.5 h-4 w-4 flex-shrink-0 rounded border-gray-300 text-blue-600 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-900"
+                />
+                <div className="min-w-0">
+                  <div className="font-medium text-gray-700 dark:text-gray-200">{d.name}</div>
+                  <div className="truncate text-xs text-gray-400 dark:text-gray-500">{d.path}</div>
+                </div>
+              </label>
+            ))}
           </div>
         </div>
-      )}
+      </Modal>
     </div>
   );
 }

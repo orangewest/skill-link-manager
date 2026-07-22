@@ -99,6 +99,15 @@ pub struct AppConfig {
     /// Theme preference: "light", "dark", or "system".
     #[serde(default = "default_theme")]
     pub theme: String,
+    /// Skill categorization: `skillName -> categoryName`.
+    /// Pure UI metadata; does not affect links or the filesystem.
+    #[serde(default)]
+    pub categories: HashMap<String, String>,
+    /// User-maintained ordered list of category names. Drives the
+    /// grouping order on the home page and lets categories exist even
+    /// when no skill is currently assigned to them.
+    #[serde(default)]
+    pub category_order: Vec<String>,
 }
 
 fn default_theme() -> String {
@@ -122,6 +131,10 @@ struct AppConfigPartial {
     language: Option<String>,
     #[serde(default)]
     theme: Option<String>,
+    #[serde(default)]
+    categories: Option<HashMap<String, String>>,
+    #[serde(default)]
+    category_order: Option<Vec<String>>,
 }
 
 impl Default for AppConfig {
@@ -137,6 +150,8 @@ impl Default for AppConfig {
             skills_checked: HashMap::new(),
             language: "zh".to_string(),
             theme: "system".to_string(),
+            categories: HashMap::new(),
+            category_order: Vec::new(),
         }
     }
 }
@@ -205,6 +220,8 @@ fn parse_config(content: &str) -> AppConfig {
         skills_checked: partial.skills_checked.unwrap_or(default.skills_checked),
         language: partial.language.unwrap_or(default.language),
         theme: partial.theme.unwrap_or(default.theme),
+        categories: partial.categories.unwrap_or(default.categories),
+        category_order: partial.category_order.unwrap_or(default.category_order),
     }
 }
 

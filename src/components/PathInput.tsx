@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { open } from "@tauri-apps/plugin-dialog";
 import { useI18n } from "../i18n/I18nContext";
+import Tooltip from "./Tooltip";
 
 interface Props {
   value: string;
@@ -59,8 +60,8 @@ export default function PathInput({
 
   const btnClasses =
     size === "lg"
-      ? "flex-shrink-0 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
-      : "flex-shrink-0 rounded border border-gray-300 bg-white px-2.5 py-1 text-xs font-medium text-gray-600 hover:bg-gray-100 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700";
+      ? "flex-shrink-0 rounded-lg border border-gray-300 bg-white p-2 text-gray-600 hover:bg-gray-100 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
+      : "flex-shrink-0 rounded border border-gray-300 bg-white p-1.5 text-gray-600 hover:bg-gray-100 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700";
 
   return (
     <div className={`flex gap-2 ${className}`}>
@@ -73,14 +74,28 @@ export default function PathInput({
         className={`min-w-0 flex-1 ${inputClasses} focus:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400`}
       />
       {browseable && (
-        <button
-          type="button"
-          onClick={handleBrowse}
-          disabled={picking}
-          className={`${btnClasses} disabled:cursor-not-allowed disabled:opacity-50`}
-        >
-          {picking ? "..." : t("browse")}
-        </button>
+        <Tooltip text={t("browse")}>
+          <button
+            type="button"
+            onClick={handleBrowse}
+            disabled={picking}
+            aria-label={t("browse")}
+            className={`${btnClasses} flex items-center justify-center disabled:cursor-not-allowed disabled:opacity-50`}
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className={picking ? "h-4 w-4 animate-spin" : "h-4 w-4"}
+            >
+              <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />
+            </svg>
+          </button>
+        </Tooltip>
       )}
     </div>
   );

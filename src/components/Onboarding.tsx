@@ -117,6 +117,8 @@ export default function Onboarding({ onComplete }: Props) {
         skills_checked: {},
         language: "zh",
         theme: "system",
+        categories: {},
+        category_order: [],
       };
       await invoke("save_config", { config: newConfig });
       onComplete(newConfig);

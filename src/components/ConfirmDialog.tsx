@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import Modal from "./Modal";
 import { useI18n } from "../i18n/I18nContext";
 
 type DialogKind = "danger" | "warning" | "info";
@@ -37,28 +37,6 @@ export default function ConfirmDialog({
 }: Props) {
   const { t } = useI18n();
 
-  // Close on ESC
-  useEffect(() => {
-    if (!open) return;
-    const handler = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onCancel();
-    };
-    document.addEventListener("keydown", handler);
-    return () => document.removeEventListener("keydown", handler);
-  }, [open, onCancel]);
-
-  // Lock body scroll while open
-  useEffect(() => {
-    if (!open) return;
-    const { overflow } = document.body.style;
-    document.body.style.overflow = "hidden";
-    return () => {
-      document.body.style.overflow = overflow;
-    };
-  }, [open]);
-
-  if (!open) return null;
-
   const confirmBtnClass: Record<DialogKind, string> = {
     danger: "bg-red-600 text-white hover:bg-red-700",
     warning: "bg-amber-600 text-white hover:bg-amber-700",
@@ -80,50 +58,42 @@ export default function ConfirmDialog({
   const Icon =
     kind === "info" ? InfoIcon : kind === "warning" ? WarningIcon : AlertIcon;
 
-  return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm"
-      onClick={onCancel}
-      role="dialog"
-      aria-modal="true"
-    >
-      <div
-        className="w-full max-w-sm rounded-xl border border-gray-200 bg-white p-5 shadow-2xl dark:border-gray-700 dark:bg-gray-800"
-        onClick={(e) => e.stopPropagation()}
+  const footer = (
+    <>
+      <button
+        onClick={onCancel}
+        className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-100 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700"
       >
-        <div className="flex items-start gap-3">
-          <div
-            className={`flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full ${iconBg[kind]}`}
-          >
-            <Icon className={`h-5 w-5 ${iconColor[kind]}`} />
-          </div>
-          <div className="min-w-0 flex-1 pt-0.5">
-            {title && (
-              <h3 className="mb-1 text-base font-semibold text-gray-800 dark:text-gray-100">
-                {title}
-              </h3>
-            )}
-            <p className="whitespace-pre-wrap text-sm text-gray-600 dark:text-gray-400">
-              {message}
-            </p>
-          </div>
+        {cancelLabel ?? t("cancel")}
+      </button>
+      <button
+        onClick={onConfirm}
+        className={`rounded-lg px-4 py-2 text-sm font-medium text-white transition-colors ${confirmBtnClass[kind]}`}
+      >
+        {confirmLabel ?? t("confirm")}
+      </button>
+    </>
+  );
+
+  return (
+    <Modal
+      open={open}
+      onClose={onCancel}
+      size="sm"
+      title={title}
+      icon={
+        <div
+          className={`flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full ${iconBg[kind]}`}
+        >
+          <Icon className={`h-5 w-5 ${iconColor[kind]}`} />
         </div>
-        <div className="mt-5 flex justify-end gap-2">
-          <button
-            onClick={onCancel}
-            className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-100 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700"
-          >
-            {cancelLabel ?? t("cancel")}
-          </button>
-          <button
-            onClick={onConfirm}
-            className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors ${confirmBtnClass[kind]}`}
-          >
-            {confirmLabel ?? t("confirm")}
-          </button>
-        </div>
-      </div>
-    </div>
+      }
+      footer={footer}
+    >
+      <p className="whitespace-pre-wrap text-sm text-gray-600 dark:text-gray-400">
+        {message}
+      </p>
+    </Modal>
   );
 }
 

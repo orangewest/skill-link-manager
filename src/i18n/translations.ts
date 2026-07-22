@@ -34,6 +34,7 @@ export type TranslationKey =
   | "confirmDelete"
   | "applying"
   | "linkAll"
+  | "unlinkAll"
   | "clickToViewDetail"
   | "onboardingTitle"
   | "onboardingWelcome"
@@ -83,7 +84,33 @@ export type TranslationKey =
   | "redetectTitle"
   | "redetectSelectHint"
   | "addSelected"
-  | "redetectAddedNone";
+  | "redetectAddedNone"
+  | "category"
+  | "uncategorized"
+  | "manageCategories"
+  | "addCategory"
+  | "categoryName"
+  | "renameCategory"
+  | "deleteCategory"
+  | "confirmDeleteCategory"
+  | "createCategoryHint"
+  | "noCategories"
+  | "dragToReorder"
+  | "dragToReorderHint"
+  | "rename"
+  | "addSkillToCategory"
+  | "skillsInCategory"
+  | "noSkillsInCategory"
+  | "searchSkills"
+  | "selectedCount"
+  | "done"
+  | "removeFromCategory"
+  | "categoryMembers"
+  | "showCategorized"
+  | "hideCategorized"
+  | "inCategory"
+  | "selectAll"
+  | "selectNone";
 
 export const translations: Record<Language, Record<TranslationKey, string>> = {
   zh: {
@@ -120,6 +147,7 @@ export const translations: Record<Language, Record<TranslationKey, string>> = {
     confirmDelete: "\u786e\u5b9a\u8981\u5220\u9664\u6b64\u5de5\u5177\u76ee\u5f55\u5417\uff1f",
     applying: "\u5e94\u7528\u4e2d...",
     linkAll: "\u5168\u90e8\u94fe\u63a5",
+    unlinkAll: "\u5168\u90e8\u53d6\u6d88\u94fe\u63a5",
     clickToViewDetail: "\u70b9\u51fb\u67e5\u770b\u8be6\u60c5",
     onboardingTitle: "\u521d\u59cb\u8bbe\u7f6e",
     onboardingWelcome: "\u6b22\u8fce\u4f7f\u7528 Skill Link Manager\uff0c\u8bf7\u5b8c\u6210\u4ee5\u4e0b\u521d\u59cb\u914d\u7f6e\u3002",
@@ -170,6 +198,32 @@ export const translations: Record<Language, Record<TranslationKey, string>> = {
     redetectSelectHint: "\u52fe\u9009\u8981\u6dfb\u52a0\u7684\u76ee\u5f55\uff0c\u7136\u540e\u70b9\u51fb\u4fdd\u5b58",
     addSelected: "\u6dfb\u52a0\u9009\u4e2d",
     redetectAddedNone: "\u672a\u6dfb\u52a0\u4efb\u4f55\u76ee\u5f55",
+    category: "\u5206\u7c7b",
+    uncategorized: "\u672a\u5206\u7c7b",
+    manageCategories: "\u7ba1\u7406\u5206\u7c7b",
+    addCategory: "\u65b0\u589e\u5206\u7c7b",
+    categoryName: "\u5206\u7c7b\u540d\u79f0",
+    renameCategory: "\u91cd\u547d\u540d\u5206\u7c7b",
+    deleteCategory: "\u5220\u9664\u5206\u7c7b",
+    confirmDeleteCategory: "\u5220\u9664\u8be5\u5206\u7c7b\u540e\uff0c\u5176\u4e0b\u7684 skill \u5c06\u5f52\u5165\u300c\u672a\u5206\u7c7b\u300d\u3002\u662f\u5426\u7ee7\u7eed\uff1f",
+    createCategoryHint: "\u70b9\u51fb\u300c\u65b0\u589e\u5206\u7c7b\u300d\uff0c\u5728\u5f39\u51fa\u7684\u5bf9\u8bdd\u6846\u4e2d\u8f93\u5165\u540d\u79f0\u5373\u53ef\u521b\u5efa\u3002",
+    noCategories: "\u8fd8\u6ca1\u6709\u5206\u7c7b\uff0c\u70b9\u51fb\u4e0a\u65b9\u7684\u300c\u65b0\u589e\u5206\u7c7b\u300d\u5373\u53ef\u521b\u5efa\u3002",
+    dragToReorder: "\u62d6\u52a8\u6392\u5e8f",
+    dragToReorderHint: "\u62d6\u52a8\u6bcf\u4e2a\u5206\u7c7b\u5de6\u4fa7\u7684\u22ee\u22ee \u53ef\u8c03\u6574\u987a\u5e8f\u3002",
+    rename: "\u91cd\u547d\u540d",
+    addSkillToCategory: "\u6dfb\u52a0 Skill",
+    skillsInCategory: "\u8be5\u5206\u7c7b\u4e0b\u7684 Skill",
+    noSkillsInCategory: "\u8be5\u5206\u7c7b\u4e0b\u8fd8\u6ca1\u6709 Skill\u3002",
+    searchSkills: "\u641c\u7d22 Skill...",
+    selectedCount: "\u5df2\u9009\u62e9 {count} \u4e2a",
+    done: "\u5b8c\u6210",
+    removeFromCategory: "\u79fb\u51fa\u8be5\u5206\u7c7b",
+    categoryMembers: "\u7ba1\u7406\u300c{name}\u300d\u5206\u7c7b\u4e0b\u7684 Skill",
+    showCategorized: "\u663e\u793a\u5df2\u5206\u7c7b\u7684 Skill",
+    hideCategorized: "\u9690\u85cf\u5df2\u5206\u7c7b\u7684 Skill",
+    inCategory: "\u5df2\u5728\u300c{name}\u300d",
+    selectAll: "\u5168\u9009",
+    selectNone: "\u5168\u4e0d\u9009",
   },
   en: {
     appTitle: "Skill Link Manager",
@@ -205,6 +259,7 @@ export const translations: Record<Language, Record<TranslationKey, string>> = {
     confirmDelete: "Are you sure you want to delete this tool directory?",
     applying: "Applying...",
     linkAll: "Link All",
+    unlinkAll: "Unlink All",
     clickToViewDetail: "Click to view detail",
     onboardingTitle: "Initial Setup",
     onboardingWelcome: "Welcome to Skill Link Manager. Please complete the initial setup below.",
@@ -255,5 +310,31 @@ export const translations: Record<Language, Record<TranslationKey, string>> = {
     redetectSelectHint: "Check the directories to add, then click Save.",
     addSelected: "Add Selected",
     redetectAddedNone: "No directories were added",
+    category: "Category",
+    uncategorized: "Uncategorized",
+    manageCategories: "Manage Categories",
+    addCategory: "Add Category",
+    categoryName: "Category name",
+    renameCategory: "Rename Category",
+    deleteCategory: "Delete Category",
+    confirmDeleteCategory: "After deleting this category, its skills will become \"Uncategorized\". Continue?",
+    createCategoryHint: "Click \"Add Category\" and type a name in the dialog to create one.",
+    noCategories: "No categories yet. Click \"Add Category\" above to create one.",
+    dragToReorder: "Drag to reorder",
+    dragToReorderHint: "Drag the ⋮⋮ handle on the left of each category to reorder.",
+    rename: "Rename",
+    addSkillToCategory: "Add Skill",
+    skillsInCategory: "Skills in this category",
+    noSkillsInCategory: "No skills in this category yet.",
+    searchSkills: "Search skills...",
+    selectedCount: "{count} selected",
+    done: "Done",
+    removeFromCategory: "Remove from category",
+    categoryMembers: "Manage skills in \u201c{name}\u201d",
+    showCategorized: "Show categorized skills",
+    hideCategorized: "Hide categorized skills",
+    inCategory: "In \u201c{name}\u201d",
+    selectAll: "Select All",
+    selectNone: "Select None",
   },
 };

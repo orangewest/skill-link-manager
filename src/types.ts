@@ -69,4 +69,8 @@ export interface AppConfig {
   skills_checked: Record<string, boolean>;
   language: string;
   theme: string; // "light" | "dark" | "system"
+  /** skillName -> categoryName. Pure UI metadata. */
+  categories: Record<string, string>;
+  /** User-ordered category names driving the home page grouping order. */
+  category_order: string[];
 }

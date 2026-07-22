@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import type { SkillInfo, AppConfig } from "./types";
 import { I18nProvider, useI18n } from "./i18n/I18nContext";
@@ -8,8 +8,48 @@ import SkillDetail from "./components/SkillDetail";
 import SettingsPage from "./components/SettingsPage";
 import ToolDirDetail from "./components/ToolDirDetail";
 import Onboarding from "./components/Onboarding";
+import CategoryManager from "./components/CategoryManager";
 import ThemeToggle from "./components/ThemeToggle";
 import type { Theme } from "./components/ThemeToggle";
+import Tooltip from "./components/Tooltip";
+
+/** Small inline gear (settings) icon. */
+function GearIcon() {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className="h-5 w-5"
+    >
+      <circle cx="12" cy="12" r="3" />
+      <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
+    </svg>
+  );
+}
+
+/** Small inline home icon. */
+function HomeIcon() {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className="h-5 w-5"
+    >
+      <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+      <polyline points="9 22 9 12 15 12 15 22" />
+    </svg>
+  );
+}
 
 type Page = "home" | "detail" | "settings" | "toolDirDetail" | "onboarding";
 
@@ -34,6 +74,10 @@ function AppContent() {
   const [error, setError] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
   const configRef = useRef<AppConfig | null>(null);
+
+  // ---- Categorization UI state ----
+  const [showCategoryModal, setShowCategoryModal] = useState(false);
+  const [collapsedCats, setCollapsedCats] = useState<Record<string, boolean>>({});
 
   // ---- Initial load: check config existence → onboarding or normal ----
   useEffect(() => {
@@ -178,12 +222,138 @@ function AppContent() {
     [setLanguage]
   );
 
+  // ---- Categorization helpers ----
+  const updateConfig = useCallback((updater: (c: AppConfig) => AppConfig) => {
+    const current = configRef.current;
+    if (!current) return;
+    const newConfig = updater(current);
+    configRef.current = newConfig;
+    setConfig(newConfig);
+    invoke("save_config", { config: newConfig }).catch((e: unknown) =>
+      console.error("Failed to save config:", e)
+    );
+  }, []);
+
+  const handleReorderCategories = useCallback(
+    (order: string[]) => {
+      updateConfig((c) => ({ ...c, category_order: order }));
+    },
+    [updateConfig]
+  );
+
+  const handleSetCategoryMembers = useCallback(
+    (category: string, skillNames: string[]) => {
+      updateConfig((c) => {
+        const categories = { ...c.categories };
+        // Drop the category from skills that used to be members but aren't now.
+        for (const [k, v] of Object.entries(categories)) {
+          if (v === category && !skillNames.includes(k)) delete categories[k];
+        }
+        // Assign the category to every selected skill.
+        for (const name of skillNames) categories[name] = category;
+        return { ...c, categories };
+      });
+    },
+    [updateConfig]
+  );
+
+  const handleAddCategory = useCallback(
+    (name: string) => {
+      const trimmed = name.trim();
+      if (!trimmed) return;
+      updateConfig((c) => {
+        if (c.category_order.includes(trimmed)) return c;
+        return { ...c, category_order: [...c.category_order, trimmed] };
+      });
+    },
+    [updateConfig]
+  );
+
+  const handleRenameCategory = useCallback(
+    (oldName: string, newName: string) => {
+      const trimmed = newName.trim();
+      if (!trimmed || trimmed === oldName) return;
+      updateConfig((c) => {
+        const category_order = c.category_order.includes(oldName)
+          ? c.category_order.map((o) => (o === oldName ? trimmed : o))
+          : [...c.category_order, trimmed];
+        const categories = { ...c.categories };
+        for (const [k, v] of Object.entries(categories)) {
+          if (v === oldName) categories[k] = trimmed;
+        }
+        return { ...c, category_order, categories };
+      });
+    },
+    [updateConfig]
+  );
+
+  const handleDeleteCategory = useCallback(
+    (name: string) => {
+      if (!window.confirm(t("confirmDeleteCategory"))) return;
+      updateConfig((c) => {
+        const category_order = c.category_order.filter((o) => o !== name);
+        const categories = { ...c.categories };
+        for (const k of Object.keys(categories)) {
+          if (categories[k] === name) delete categories[k];
+        }
+        return { ...c, category_order, categories };
+      });
+    },
+    [updateConfig, t]
+  );
+
   // ---- Filtered skills for search ----
   const filteredSkills = searchQuery
     ? skills.filter((s) =>
         s.name.toLowerCase().includes(searchQuery.toLowerCase())
       )
     : skills;
+
+  // ---- Categorization (pure UI; does not affect links/filesystem) ----
+  const UNCATEGORIZED = "__uncategorized__";
+  const categoriesMap = config?.categories ?? {};
+  const categoryOrder = config?.category_order ?? [];
+
+  // Category names = order + any categories still present in the map
+  // but accidentally missing from `category_order` (orphans).
+  const categoryNames = useMemo(() => {
+    const set = new Set<string>();
+    for (const c of categoryOrder) if (c && c.trim()) set.add(c);
+    for (const c of Object.values(categoriesMap)) if (c && c.trim()) set.add(c);
+    return Array.from(set);
+  }, [categoryOrder, categoriesMap]);
+
+  // Group filtered skills by category; order follows `category_order`,
+  // with an "Uncategorized" bucket appended for skills with no category.
+  const groupedSkills = useMemo(() => {
+    const map = new Map<string, SkillInfo[]>();
+    for (const s of filteredSkills) {
+      const cat = (categoriesMap[s.name] || "").trim();
+      const key = cat || UNCATEGORIZED;
+      if (!map.has(key)) map.set(key, []);
+      map.get(key)!.push(s);
+    }
+    const ordered = [
+      ...categoryOrder.filter((c) => map.has(c)),
+      ...categoryNames.filter((c) => !categoryOrder.includes(c) && map.has(c)),
+    ];
+    const result: { key: string; label: string; skills: SkillInfo[] }[] = [];
+    for (const key of ordered) {
+      result.push({
+        key,
+        label: key === UNCATEGORIZED ? t("uncategorized") : key,
+        skills: map.get(key)!,
+      });
+    }
+    if (map.has(UNCATEGORIZED) && !ordered.includes(UNCATEGORIZED)) {
+      result.push({
+        key: UNCATEGORIZED,
+        label: t("uncategorized"),
+        skills: map.get(UNCATEGORIZED)!,
+      });
+    }
+    return result;
+  }, [filteredSkills, categoriesMap, categoryOrder, categoryNames, t]);
 
   return (
     <div className="min-h-screen bg-gray-50 text-gray-800 dark:bg-gray-900 dark:text-gray-100">
@@ -217,23 +387,28 @@ function AppContent() {
               {language === "zh" ? "EN" : "\u4e2d"}
             </button>
             {/* Settings / Home button (hidden during onboarding) */}
-            {currentPage !== "onboarding" && (
-              currentPage !== "settings" ? (
-                <button
-                  onClick={() => setCurrentPage("settings")}
-                  className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-100 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700"
-                >
-                  {t("settings")}
-                </button>
+            {currentPage !== "onboarding" &&
+              (currentPage !== "settings" ? (
+                <Tooltip text={t("settings")}>
+                  <button
+                    onClick={() => setCurrentPage("settings")}
+                    aria-label={t("settings")}
+                    className="flex items-center justify-center rounded-lg border border-gray-300 px-3 py-1.5 text-gray-700 transition-colors hover:bg-gray-100 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700"
+                  >
+                    <GearIcon />
+                  </button>
+                </Tooltip>
               ) : (
-                <button
-                  onClick={() => setCurrentPage("home")}
-                  className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-100 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700"
-                >
-                  {t("home")}
-                </button>
-              )
-            )}
+                <Tooltip text={t("home")}>
+                  <button
+                    onClick={() => setCurrentPage("home")}
+                    aria-label={t("home")}
+                    className="flex items-center justify-center rounded-lg border border-gray-300 px-3 py-1.5 text-gray-700 transition-colors hover:bg-gray-100 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700"
+                  >
+                    <HomeIcon />
+                  </button>
+                </Tooltip>
+              ))}
           </div>
         </div>
 
@@ -289,46 +464,124 @@ function AppContent() {
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="flex-1 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm focus:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
               />
-              <button
-                onClick={handleRefreshSkills}
-                disabled={refreshing}
-                title={t("refresh")}
-                className="flex h-[38px] items-center justify-center rounded-lg border border-gray-300 px-3 text-gray-600 transition-colors hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700"
-              >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  className={"h-4 w-4" + (refreshing ? " animate-spin" : "")}
+              <Tooltip text={t("refresh")}>
+                <button
+                  onClick={handleRefreshSkills}
+                  disabled={refreshing}
+                  aria-label={t("refresh")}
+                  className="flex h-[38px] items-center justify-center rounded-lg border border-gray-300 px-3 text-gray-600 transition-colors hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700"
                 >
-                  <polyline points="23 4 23 10 17 10" />
-                  <polyline points="1 20 1 14 7 14" />
-                  <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" />
-                </svg>
-              </button>
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    className={"h-4 w-4" + (refreshing ? " animate-spin" : "")}
+                  >
+                    <polyline points="23 4 23 10 17 10" />
+                    <polyline points="1 20 1 14 7 14" />
+                    <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" />
+                  </svg>
+                </button>
+              </Tooltip>
+              <Tooltip text={t("manageCategories")}>
+                <button
+                  onClick={() => setShowCategoryModal(true)}
+                  aria-label={t("manageCategories")}
+                  className="flex h-[38px] items-center justify-center rounded-lg border border-gray-300 px-3 text-gray-700 transition-colors hover:bg-gray-100 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700"
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    className="h-4 w-4"
+                  >
+                    <path d="M3 7h18M3 12h18M3 17h18" />
+                  </svg>
+                </button>
+              </Tooltip>
             </div>
 
-            {/* Skill cards grid */}
+            {/* Grouped skill sections */}
             {filteredSkills.length === 0 ? (
               <p className="py-6 text-center text-sm text-gray-400 dark:text-gray-500">
                 {searchQuery ? t("noSearchResults") : t("noSkills")}
               </p>
             ) : (
-              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                {filteredSkills.map((skill) => (
-                  <SkillCard
-                    key={skill.name}
-                    skill={skill}
-                    onClick={handleSkillClick}
-                  />
-                ))}
+              <div className="space-y-5">
+                {groupedSkills.map((group) => {
+                  const isCollapsed = collapsedCats[group.key];
+                  return (
+                    <div key={group.key}>
+                      <button
+                        onClick={() =>
+                          setCollapsedCats((prev) => ({
+                            ...prev,
+                            [group.key]: !prev[group.key],
+                          }))
+                        }
+                        className="mb-3 flex w-full items-center gap-2 text-left text-sm font-semibold text-gray-700 transition-colors hover:text-gray-900 dark:text-gray-300 dark:hover:text-gray-100"
+                      >
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          className={
+                            "h-4 w-4 flex-shrink-0 transition-transform " +
+                            (isCollapsed ? "" : " rotate-90")
+                          }
+                        >
+                          <polyline points="9 18 15 12 9 6" />
+                        </svg>
+                        <span>{group.label}</span>
+                        <span className="rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-500 dark:bg-gray-700 dark:text-gray-300">
+                          {group.skills.length}
+                        </span>
+                      </button>
+                      {!isCollapsed && (
+                        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                          {group.skills.map((skill) => (
+                            <SkillCard
+                              key={skill.name}
+                              skill={skill}
+                              onClick={handleSkillClick}
+                            />
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             )}
           </>
+        )}
+
+        {/* ---- Manage categories modal ---- */}
+        {showCategoryModal && (
+          <CategoryManager
+            open={showCategoryModal}
+            onClose={() => setShowCategoryModal(false)}
+            categoryOrder={categoryOrder}
+            categoriesMap={categoriesMap}
+            skills={skills}
+            onReorder={handleReorderCategories}
+            onAddCategory={handleAddCategory}
+            onRenameCategory={handleRenameCategory}
+            onDeleteCategory={handleDeleteCategory}
+            onApplyMembers={handleSetCategoryMembers}
+          />
         )}
 
         {/* ---- Skill detail view ---- */}
@@ -344,6 +597,8 @@ function AppContent() {
           <ToolDirDetail
             toolDirName={selectedToolDirName}
             onBack={handleBackFromToolDirDetail}
+            categoriesMap={categoriesMap}
+            categoryOrder={categoryOrder}
           />
         )}
 

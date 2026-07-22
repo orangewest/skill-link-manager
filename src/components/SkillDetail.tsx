@@ -1,7 +1,45 @@
-import { useState, useEffect, useCallback, type ReactNode } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import type { SkillDetail as SkillDetailType } from "../types";
 import { useI18n } from "../i18n/I18nContext";
+import Modal from "./Modal";
+import Tooltip from "./Tooltip";
+
+/** Small inline link icon. */
+function LinkIcon({ className = "" }: { className?: string }) {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={"h-4 w-4 " + className}
+    >
+      <path d="M9 17H7A5 5 0 0 1 7 7h2M15 7h2a5 5 0 0 1 0 10h-2M8 12h4" />
+    </svg>
+  );
+}
+
+/** Small inline "link off" icon. */
+function UnlinkIcon({ className = "" }: { className?: string }) {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={"h-4 w-4 " + className}
+    >
+      <path d="M9 17H7A5 5 0 0 1 7 7h2M15 7h2a5 5 0 0 1 0 10h-2M8 12h4M3 3l18 18" />
+    </svg>
+  );
+}
 
 interface Props {
   skillName: string;
@@ -72,6 +110,23 @@ export default function SkillDetail({ skillName, onBack }: Props) {
         selectedSkills: [skillName],
         selectedToolDirs: toolDirNames,
       });
+      await loadDetail();
+    } catch (e: unknown) {
+      setError(typeof e === "string" ? e : String(e));
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  // Unlink the skill from every tool dir it is currently linked to.
+  const handleUnlinkAll = async () => {
+    if (!detail) return;
+    setActionLoading("all");
+    setError(null);
+    try {
+      for (const d of detail.linked_dirs) {
+        if (d.linked) await invoke("remove_link", { skillName, toolDirName: d.name });
+      }
       await loadDetail();
     } catch (e: unknown) {
       setError(typeof e === "string" ? e : String(e));
@@ -154,6 +209,12 @@ export default function SkillDetail({ skillName, onBack }: Props) {
 
   if (!detail) return null;
 
+  // True when the skill is linked into every tool dir — then the top-right
+  // toggle should offer to unlink all; otherwise it links all.
+  const allLinked =
+    detail.linked_dirs.length > 0 &&
+    detail.linked_dirs.every((d) => d.linked);
+
   return (
     <div>
       {/* Back button */}
@@ -180,45 +241,58 @@ export default function SkillDetail({ skillName, onBack }: Props) {
         <div className="flex items-center justify-between gap-3">
           <h2 className="text-xl font-bold text-gray-800 dark:text-gray-100">{detail.name}</h2>
           <div className="flex flex-shrink-0 items-center gap-2">
-            <button
-              onClick={handleOpenFolder}
-              title={detail.path}
-              className="flex items-center gap-1 rounded-lg border border-gray-200 px-3 py-1.5 text-sm text-gray-600 transition-colors hover:bg-gray-50 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-800"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4">
-                <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />
-              </svg>
-              {t("openFolder")}
-            </button>
-            <button
-              onClick={handleRequestDelete}
-              disabled={deleteLoading}
-              className="flex items-center gap-1 rounded-lg border border-red-200 px-3 py-1.5 text-sm text-red-600 transition-colors hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-red-800 dark:text-red-400 dark:hover:bg-red-900/30"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4">
-                <polyline points="3 6 5 6 21 6" />
-                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
-                <line x1="10" y1="11" x2="10" y2="17" />
-                <line x1="14" y1="11" x2="14" y2="17" />
-              </svg>
-              {t("deleteSkill")}
-            </button>
+            {/* Open folder */}
+            <Tooltip text={t("openFolder")}>
+              <button
+                onClick={handleOpenFolder}
+                aria-label={t("openFolder")}
+                className="rounded-lg border border-gray-200 p-1.5 text-gray-600 transition-colors hover:bg-gray-50 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-800"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4">
+                  <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />
+                </svg>
+              </button>
+            </Tooltip>
+            {/* Link / unlink all — colored like the per-row add/remove buttons */}
+            <Tooltip text={actionLoading === "all" ? t("applying") : allLinked ? t("unlinkAll") : t("linkAll")}>
+              <button
+                onClick={() => (allLinked ? handleUnlinkAll() : handleApplyToAll())}
+                disabled={actionLoading === "all"}
+                aria-label={allLinked ? t("unlinkAll") : t("linkAll")}
+                className={
+                  allLinked
+                    ? "rounded-lg bg-red-50 p-1.5 text-red-600 transition-colors hover:bg-red-100 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-red-900/30 dark:text-red-400 dark:hover:bg-red-900/50"
+                    : "rounded-lg bg-blue-50 p-1.5 text-blue-600 transition-colors hover:bg-blue-100 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-blue-900/30 dark:text-blue-400 dark:hover:bg-blue-900/50"
+                }
+              >
+                {allLinked ? (
+                  <UnlinkIcon className={actionLoading === "all" ? "animate-spin" : ""} />
+                ) : (
+                  <LinkIcon className={actionLoading === "all" ? "animate-spin" : ""} />
+                )}
+              </button>
+            </Tooltip>
+            {/* Delete */}
+            <Tooltip text={t("deleteSkill")}>
+              <button
+                onClick={handleRequestDelete}
+                disabled={deleteLoading}
+                aria-label={t("deleteSkill")}
+                className="rounded-lg border border-red-200 p-1.5 text-red-600 transition-colors hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-red-800 dark:text-red-400 dark:hover:bg-red-900/30"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4">
+                  <polyline points="3 6 5 6 21 6" />
+                  <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                  <line x1="10" y1="11" x2="10" y2="17" />
+                  <line x1="14" y1="11" x2="14" y2="17" />
+                </svg>
+              </button>
+            </Tooltip>
           </div>
         </div>
         <p className="mt-2 whitespace-pre-wrap text-sm text-gray-600 dark:text-gray-400">
           {detail.description || "\u2014"}
         </p>
-      </div>
-
-      {/* Apply to all */}
-      <div className="mb-4">
-        <button
-          onClick={handleApplyToAll}
-          disabled={actionLoading === "all"}
-          className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-gray-300 dark:disabled:bg-gray-700"
-        >
-          {actionLoading === "all" ? t("applying") : t("applyToAll")}
-        </button>
       </div>
 
       {/* Tool dir list */}
@@ -238,26 +312,32 @@ export default function SkillDetail({ skillName, onBack }: Props) {
                   <span className="rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-700 dark:bg-green-900 dark:text-green-300">
                     {t("linkedStatus")}
                   </span>
-                  <button
-                    onClick={() => handleRemoveLink(dir.name)}
-                    disabled={actionLoading === `remove-${dir.name}`}
-                    className="rounded bg-red-50 px-3 py-1 text-sm text-red-600 transition-colors hover:bg-red-100 disabled:bg-gray-100 disabled:text-gray-400 dark:bg-red-900/30 dark:text-red-400 dark:hover:bg-red-900/50 dark:disabled:bg-gray-700 dark:disabled:text-gray-500"
-                  >
-                    {actionLoading === `remove-${dir.name}` ? t("loading") : t("removeLink")}
-                  </button>
+                  <Tooltip text={t("removeLink")}>
+                    <button
+                      onClick={() => handleRemoveLink(dir.name)}
+                      disabled={actionLoading === `remove-${dir.name}`}
+                      aria-label={t("removeLink")}
+                      className="rounded bg-red-50 p-1.5 text-red-600 transition-colors hover:bg-red-100 disabled:bg-gray-100 disabled:text-gray-400 dark:bg-red-900/30 dark:text-red-400 dark:hover:bg-red-900/50 dark:disabled:bg-gray-700 dark:disabled:text-gray-500"
+                    >
+                      <UnlinkIcon />
+                    </button>
+                  </Tooltip>
                 </>
               ) : (
                 <>
                   <span className="rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-500 dark:bg-gray-700 dark:text-gray-300">
                     {t("unlinkedStatus")}
                   </span>
-                  <button
-                    onClick={() => handleAddLink(dir.name)}
-                    disabled={actionLoading === `add-${dir.name}`}
-                    className="rounded bg-blue-50 px-3 py-1 text-sm text-blue-600 transition-colors hover:bg-blue-100 disabled:bg-gray-100 disabled:text-gray-400 dark:bg-blue-900/30 dark:text-blue-400 dark:hover:bg-blue-900/50 dark:disabled:bg-gray-700 dark:disabled:text-gray-500"
-                  >
-                    {actionLoading === `add-${dir.name}` ? t("loading") : t("addLink")}
-                  </button>
+                  <Tooltip text={t("addLink")}>
+                    <button
+                      onClick={() => handleAddLink(dir.name)}
+                      disabled={actionLoading === `add-${dir.name}`}
+                      aria-label={t("addLink")}
+                      className="rounded bg-blue-50 p-1.5 text-blue-600 transition-colors hover:bg-blue-100 disabled:bg-gray-100 disabled:text-gray-400 dark:bg-blue-900/30 dark:text-blue-400 dark:hover:bg-blue-900/50 dark:disabled:bg-gray-700 dark:disabled:text-gray-500"
+                    >
+                      <LinkIcon />
+                    </button>
+                  </Tooltip>
                 </>
               )}
             </div>
@@ -267,28 +347,55 @@ export default function SkillDetail({ skillName, onBack }: Props) {
 
       {/* ---- Delete confirmation: step 1 (warning) ---- */}
       {showDeleteStep1 && (
-        <Modal title={t("deleteSkill")} onClose={handleDeleteStep2Cancel}>
+        <Modal
+          size="sm"
+          title={t("deleteSkill")}
+          onClose={handleDeleteStep1Cancel}
+          footer={
+            <>
+              <button
+                onClick={handleDeleteStep1Cancel}
+                className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-100 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700"
+              >
+                {t("cancel")}
+              </button>
+              <button
+                onClick={handleDeleteStep1Continue}
+                className="rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-red-700"
+              >
+                {t("continueButton")}
+              </button>
+            </>
+          }
+        >
           <p className="text-sm text-gray-600 dark:text-gray-300">{t("deleteSkillConfirmBody")}</p>
-          <div className="mt-5 flex justify-end gap-2">
-            <button
-              onClick={handleDeleteStep1Cancel}
-              className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-100 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700"
-            >
-              {t("cancel")}
-            </button>
-            <button
-              onClick={handleDeleteStep1Continue}
-              className="rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-red-700"
-            >
-              {t("continueButton")}
-            </button>
-          </div>
         </Modal>
       )}
 
       {/* ---- Delete confirmation: step 2 (typed name) ---- */}
       {showDeleteStep2 && detail && (
-        <Modal title={t("deleteSkillFinalTitle")} onClose={handleDeleteStep2Cancel}>
+        <Modal
+          size="sm"
+          title={t("deleteSkillFinalTitle")}
+          onClose={handleDeleteStep2Cancel}
+          footer={
+            <>
+              <button
+                onClick={handleDeleteStep2Cancel}
+                className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-100 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700"
+              >
+                {t("cancel")}
+              </button>
+              <button
+                onClick={handleConfirmDelete}
+                disabled={confirmInput !== detail.name || deleteLoading}
+                className="rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-red-700 disabled:cursor-not-allowed disabled:bg-gray-300 dark:disabled:bg-gray-700"
+              >
+                {deleteLoading ? t("deleting") : t("deleteSkill")}
+              </button>
+            </>
+          }
+        >
           <p className="text-sm text-gray-600 dark:text-gray-300">
             {t("deleteSkillFinalBody")} <span className="font-mono font-semibold text-gray-800 dark:text-gray-100">{detail.name}</span>
           </p>
@@ -300,41 +407,8 @@ export default function SkillDetail({ skillName, onBack }: Props) {
             autoFocus
             className="mt-3 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm focus:border-red-400 focus:outline-none focus:ring-1 focus:ring-red-400 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
           />
-          <div className="mt-5 flex justify-end gap-2">
-            <button
-              onClick={handleDeleteStep2Cancel}
-              className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-100 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700"
-            >
-              {t("cancel")}
-            </button>
-            <button
-              onClick={handleConfirmDelete}
-              disabled={confirmInput !== detail.name || deleteLoading}
-              className="rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-red-700 disabled:cursor-not-allowed disabled:bg-gray-300 dark:disabled:bg-gray-700"
-            >
-              {deleteLoading ? t("deleting") : t("deleteSkill")}
-            </button>
-          </div>
         </Modal>
       )}
-    </div>
-  );
-}
-
-/** Small centered modal used for the delete confirmation steps. */
-function Modal({ title, onClose, children }: { title: string; onClose: () => void; children: ReactNode }) {
-  return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
-      onClick={onClose}
-    >
-      <div
-        className="w-full max-w-md rounded-xl border border-gray-200 bg-white p-5 shadow-xl dark:border-gray-700 dark:bg-gray-800"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <h3 className="mb-3 text-base font-bold text-gray-800 dark:text-gray-100">{title}</h3>
-        {children}
-      </div>
     </div>
   );
 }
