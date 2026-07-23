@@ -31,14 +31,14 @@ function SectionHeader({
     <div className="mb-3 flex items-center justify-between gap-2">
       <button
         onClick={onToggle}
-        className="flex flex-1 items-center gap-2 text-left text-sm font-semibold text-gray-700 transition-colors hover:text-gray-900 dark:text-gray-300 dark:hover:text-gray-100"
+        className="flex flex-1 items-center gap-2 text-left text-sm font-semibold text-ink transition-colors hover:text-ink dark:text-ink-4 dark:hover:text-ink"
       >
         <svg
           xmlns="http://www.w3.org/2000/svg"
           viewBox="0 0 24 24"
           fill="none"
           stroke="currentColor"
-          strokeWidth="2"
+          strokeWidth="1.75"
           strokeLinecap="round"
           strokeLinejoin="round"
           className={"h-4 w-4 flex-shrink-0 transition-transform " + (expanded ? "rotate-90" : "")}
@@ -46,7 +46,7 @@ function SectionHeader({
           <polyline points="9 18 15 12 9 6" />
         </svg>
         <span>{title}</span>
-        <span className="rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-500 dark:bg-gray-700 dark:text-gray-300">
+        <span className="rounded-full bg-fill px-2 py-0.5 text-xs font-medium text-ink-3 dark:bg-fill dark:text-ink-4">
           {count}
         </span>
       </button>
@@ -63,7 +63,7 @@ function LinkIcon() {
       viewBox="0 0 24 24"
       fill="none"
       stroke="currentColor"
-      strokeWidth="2"
+      strokeWidth="1.75"
       strokeLinecap="round"
       strokeLinejoin="round"
       className="h-3.5 w-3.5"
@@ -81,7 +81,7 @@ function UnlinkIcon() {
       viewBox="0 0 24 24"
       fill="none"
       stroke="currentColor"
-      strokeWidth="2"
+      strokeWidth="1.75"
       strokeLinecap="round"
       strokeLinejoin="round"
       className="h-3.5 w-3.5"
@@ -122,8 +122,8 @@ function LinkAllToggle({
         aria-label={title}
         className={
           allLinked
-            ? "rounded-md border border-gray-300 p-1.5 text-gray-600 transition-colors hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700"
-            : "rounded-md bg-blue-600 p-1.5 text-white transition-colors hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-gray-300 dark:disabled:bg-gray-700"
+            ? "rounded-chip border border-hairline p-1.5 text-ink-2 transition-colors hover:bg-fill disabled:cursor-not-allowed disabled:opacity-50 dark:border-hairline dark:text-ink-4 dark:hover:bg-hover"
+            : "rounded-chip bg-accent p-1.5 text-white transition-colors hover:bg-accent-press disabled:cursor-not-allowed disabled:bg-fill dark:disabled:bg-fill"
         }
       >
         {allLinked ? <UnlinkIcon /> : <LinkIcon />}
@@ -304,7 +304,7 @@ export default function ToolDirDetail({
 
   if (loading) {
     return (
-      <div className="py-10 text-center text-gray-500 dark:text-gray-400">{t("loading")}</div>
+      <div className="py-10 text-center text-ink-3 dark:text-ink-4">{t("loading")}</div>
     );
   }
 
@@ -313,15 +313,15 @@ export default function ToolDirDetail({
       <div>
         <button
           onClick={onBack}
-          className="mb-4 flex items-center gap-1 text-sm text-gray-600 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200"
+          className="mb-4 flex items-center gap-1 text-sm text-ink-2 hover:text-ink dark:text-ink-4 dark:hover:text-ink"
         >
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4">
             <line x1="19" y1="12" x2="5" y2="12" />
             <polyline points="12 19 5 12 12 5" />
           </svg>
           {t("back")}
         </button>
-        <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-800 dark:bg-red-900/30 dark:text-red-300">
+        <div className="rounded-card border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-800 dark:bg-red-900/30 dark:text-red-300">
           <strong>{t("error")}: </strong>
           {error}
         </div>
@@ -336,9 +336,9 @@ export default function ToolDirDetail({
       {/* Back button */}
       <button
         onClick={onBack}
-        className="mb-4 flex items-center gap-1 text-sm text-gray-600 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200"
+        className="mb-4 flex items-center gap-1 text-sm text-ink-2 hover:text-ink dark:text-ink-4 dark:hover:text-ink"
       >
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4">
           <line x1="19" y1="12" x2="5" y2="12" />
           <polyline points="12 19 5 12 12 5" />
         </svg>
@@ -347,22 +347,22 @@ export default function ToolDirDetail({
 
       {/* Error message (non-fatal) */}
       {error && (
-        <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-800 dark:bg-red-900/30 dark:text-red-300">
+        <div className="mb-4 rounded-card border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-800 dark:bg-red-900/30 dark:text-red-300">
           {error}
         </div>
       )}
 
       {/* Success message (e.g. sync) */}
       {infoMsg && (
-        <div className="mb-4 rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700 dark:border-green-800 dark:bg-green-900/30 dark:text-green-300">
+        <div className="mb-4 rounded-card border border-live-bg bg-live-bg px-4 py-3 text-sm text-live dark:border-live-bg dark:bg-live-bg dark:text-live">
           {infoMsg}
         </div>
       )}
 
       {/* Tool dir header */}
       <div className="mb-6">
-        <h2 className="text-xl font-bold text-gray-800 dark:text-gray-100">{detail.name}</h2>
-        <p className="mt-1 break-all text-sm text-gray-500 dark:text-gray-400">{detail.path}</p>
+        <h2 className="text-xl font-bold tracking-tight text-ink dark:text-ink">{detail.name}</h2>
+        <p className="mt-1 break-all text-sm text-ink-3 dark:text-ink-4">{detail.path}</p>
       </div>
 
       {/* Search */}
@@ -372,12 +372,12 @@ export default function ToolDirDetail({
           placeholder={t("searchInToolDir")}
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm focus:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
+          className="w-full rounded-card border border-hairline bg-surface px-3 py-2 text-sm focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent dark:border-hairline dark:bg-surface dark:text-ink"
         />
       </div>
 
       {/* ===== Public skills section (expanded by default) ===== */}
-      <div className="mb-6 rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800">
+      <div className="mb-6 rounded-panel border border-hairline bg-surface p-4 shadow-card dark:border-hairline dark:bg-surface">
         <SectionHeader
           title={t("publicSkills")}
           count={detail.skills.length}
@@ -386,7 +386,7 @@ export default function ToolDirDetail({
         />
         {publicExpanded && (
           filteredPublic.length === 0 ? (
-            <p className="py-4 text-center text-sm text-gray-400 dark:text-gray-500">
+            <p className="py-4 text-center text-sm text-ink-4 dark:text-ink-3">
               {query ? t("noSearchResults") : t("noPublicSkills")}
             </p>
           ) : (
@@ -402,8 +402,8 @@ export default function ToolDirDetail({
                       className={
                         "rounded-full px-3 py-1 text-xs font-medium transition-colors " +
                         (isActive
-                          ? "bg-blue-600 text-white"
-                          : "bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600")
+                          ? "bg-accent text-white"
+                          : "bg-fill text-ink-2 hover:bg-fill dark:bg-fill dark:text-ink-4 dark:hover:bg-fill")
                       }
                     >
                       {group.label}
@@ -442,26 +442,26 @@ export default function ToolDirDetail({
               </div>
               {/* Active tab content */}
               {activeGroup && activeGroup.skills.length === 0 ? (
-                <p className="py-4 text-center text-sm text-gray-400 dark:text-gray-500">
+                <p className="py-4 text-center text-sm text-ink-4 dark:text-ink-3">
                   {t("noSearchResults")}
                 </p>
               ) : (
-                <div className="space-y-2">
+                <div className="divide-y divide-hairline overflow-hidden rounded-card border border-hairline bg-surface shadow-card dark:border-hairline dark:bg-surface">
                   {activeGroup!.skills.map((skill) => (
                     <div
                       key={skill.name}
-                      className="flex items-center justify-between rounded-lg border border-gray-100 bg-white p-3 dark:border-gray-700 dark:bg-gray-800"
+                      className="flex items-center justify-between p-3 transition-colors hover:bg-hover dark:hover:bg-hover"
                     >
                       <div className="min-w-0 flex-1">
-                        <div className="font-medium text-gray-700 dark:text-gray-200">{skill.name}</div>
+                        <div className="font-medium text-ink dark:text-ink">{skill.name}</div>
                       </div>
                       <div className="flex flex-shrink-0 items-center gap-2">
                         {skill.linked ? (
-                          <span className="rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-700 dark:bg-green-900 dark:text-green-300">
+                          <span className="rounded-full bg-live-bg px-2.5 py-0.5 text-xs font-medium text-live dark:bg-live-bg dark:text-live">
                             {t("linkedStatus")}
                           </span>
                         ) : (
-                          <span className="rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-500 dark:bg-gray-700 dark:text-gray-300">
+                          <span className="rounded-full bg-fill px-2.5 py-0.5 text-xs font-medium text-ink-3 dark:bg-fill dark:text-ink-4">
                             {t("unlinkedStatus")}
                           </span>
                         )}
@@ -470,7 +470,7 @@ export default function ToolDirDetail({
                           checked={skill.linked}
                           disabled={actionLoading === skill.name}
                           onChange={() => handleToggleLink(skill.name, skill.linked)}
-                          className="h-4 w-4 flex-shrink-0 rounded border-gray-300 text-blue-600 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-900"
+                          className="h-4 w-4 flex-shrink-0 rounded border-hairline text-accent focus:ring-accent dark:border-hairline dark:bg-surface"
                         />
                       </div>
                     </div>
@@ -483,7 +483,7 @@ export default function ToolDirDetail({
       </div>
 
       {/* ===== Private skills section (collapsed by default) ===== */}
-      <div className="rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800">
+      <div className="rounded-panel border border-hairline bg-surface p-4 shadow-card dark:border-hairline dark:bg-surface">
         <SectionHeader
           title={t("privateSkills")}
           count={detail.private_skills.length}
@@ -492,21 +492,21 @@ export default function ToolDirDetail({
         />
         {privateExpanded && (
           <>
-            <p className="mb-3 text-xs text-gray-500 dark:text-gray-400">{t("privateSkillsHint")}</p>
+            <p className="mb-3 text-xs text-ink-3 dark:text-ink-4">{t("privateSkillsHint")}</p>
             {filteredPrivate.length === 0 ? (
-              <p className="py-4 text-center text-sm text-gray-400 dark:text-gray-500">
+              <p className="py-4 text-center text-sm text-ink-4 dark:text-ink-3">
                 {query ? t("noSearchResults") : t("noPrivateSkills")}
               </p>
             ) : (
-              <div className="space-y-2">
+              <div className="divide-y divide-hairline overflow-hidden rounded-card border border-hairline bg-surface shadow-card dark:border-hairline dark:bg-surface">
                 {filteredPrivate.map((skill) => (
                   <div
                     key={skill.name}
-                    className="flex items-center justify-between gap-2 rounded-lg border border-gray-100 bg-white p-3 dark:border-gray-700 dark:bg-gray-800"
+                    className="flex items-center justify-between gap-2 p-3 transition-colors hover:bg-hover dark:hover:bg-hover"
                   >
                     <div className="min-w-0 flex-1">
-                      <div className="font-medium text-gray-700 dark:text-gray-200">{skill.name}</div>
-                      <p className="mt-0.5 line-clamp-1 text-xs text-gray-400 dark:text-gray-500">
+                      <div className="font-medium text-ink dark:text-ink">{skill.name}</div>
+                      <p className="mt-0.5 line-clamp-1 text-xs text-ink-4 dark:text-ink-3">
                         {skill.description || "\u2014"}
                       </p>
                     </div>
@@ -515,14 +515,14 @@ export default function ToolDirDetail({
                         onClick={() => handleSync(skill.name)}
                         disabled={actionLoading === `sync-${skill.name}`}
                         aria-label={t("syncSkill")}
-                        className="flex-shrink-0 rounded bg-green-600 p-1.5 text-white transition-colors hover:bg-green-700 disabled:cursor-not-allowed disabled:bg-gray-300 dark:disabled:bg-gray-700"
+                        className="flex-shrink-0 rounded bg-accent p-1.5 text-white transition-colors hover:bg-accent-press disabled:cursor-not-allowed disabled:bg-fill dark:disabled:bg-fill"
                       >
                         <svg
                           xmlns="http://www.w3.org/2000/svg"
                           viewBox="0 0 24 24"
                           fill="none"
                           stroke="currentColor"
-                          strokeWidth="2"
+                          strokeWidth="1.75"
                           strokeLinecap="round"
                           strokeLinejoin="round"
                           className={"h-4 w-4" + (actionLoading === `sync-${skill.name}` ? " animate-spin" : "")}

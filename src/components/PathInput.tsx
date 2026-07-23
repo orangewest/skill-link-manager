@@ -55,13 +55,13 @@ export default function PathInput({
 
   const inputClasses =
     size === "lg"
-      ? "rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
-      : "rounded border border-gray-300 bg-white px-2 py-1 text-sm dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100";
+      ? "rounded-card border border-hairline bg-surface px-3 py-2 text-sm dark:border-hairline dark:bg-surface dark:text-ink"
+      : "rounded-chip border border-hairline bg-surface px-2 py-1 text-sm dark:border-hairline dark:bg-surface dark:text-ink";
 
   const btnClasses =
     size === "lg"
-      ? "flex-shrink-0 rounded-lg border border-gray-300 bg-white p-2 text-gray-600 hover:bg-gray-100 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
-      : "flex-shrink-0 rounded border border-gray-300 bg-white p-1.5 text-gray-600 hover:bg-gray-100 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700";
+      ? "flex-shrink-0 rounded-chip border border-hairline bg-surface p-2 text-ink-2 hover:bg-fill dark:border-hairline dark:bg-surface dark:text-ink-4 dark:hover:bg-hover"
+      : "flex-shrink-0 rounded-chip border border-hairline bg-surface p-1.5 text-ink-2 hover:bg-fill dark:border-hairline dark:bg-surface dark:text-ink-4 dark:hover:bg-hover";
 
   return (
     <div className={`flex gap-2 ${className}`}>
@@ -71,7 +71,7 @@ export default function PathInput({
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
         aria-label={ariaLabel}
-        className={`min-w-0 flex-1 ${inputClasses} focus:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400`}
+        className={`min-w-0 flex-1 ${inputClasses} focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent`}
       />
       {browseable && (
         <Tooltip text={t("browse")}>
@@ -87,7 +87,7 @@ export default function PathInput({
               viewBox="0 0 24 24"
               fill="none"
               stroke="currentColor"
-              strokeWidth="2"
+              strokeWidth="1.75"
               strokeLinecap="round"
               strokeLinejoin="round"
               className={picking ? "h-4 w-4 animate-spin" : "h-4 w-4"}

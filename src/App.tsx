@@ -12,6 +12,7 @@ import CategoryManager from "./components/CategoryManager";
 import ThemeToggle from "./components/ThemeToggle";
 import type { Theme } from "./components/ThemeToggle";
 import Tooltip from "./components/Tooltip";
+import appIcon from "./assets/app-icon.png";
 
 /** Small inline gear (settings) icon. */
 function GearIcon() {
@@ -21,13 +22,13 @@ function GearIcon() {
       viewBox="0 0 24 24"
       fill="none"
       stroke="currentColor"
-      strokeWidth="2"
+      strokeWidth="1.75"
       strokeLinecap="round"
       strokeLinejoin="round"
       className="h-5 w-5"
     >
       <circle cx="12" cy="12" r="3" />
-      <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
+      <path d="M12 2v3M12 19v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M2 12h3M19 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1" />
     </svg>
   );
 }
@@ -40,13 +41,13 @@ function HomeIcon() {
       viewBox="0 0 24 24"
       fill="none"
       stroke="currentColor"
-      strokeWidth="2"
+      strokeWidth="1.75"
       strokeLinecap="round"
       strokeLinejoin="round"
       className="h-5 w-5"
     >
-      <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
-      <polyline points="9 22 9 12 15 12 15 22" />
+      <path d="M3 10.5 12 3l9 7.5" />
+      <path d="M5 9.5V21h14V9.5" />
     </svg>
   );
 }
@@ -77,7 +78,7 @@ function AppContent() {
 
   // ---- Categorization UI state ----
   const [showCategoryModal, setShowCategoryModal] = useState(false);
-  const [collapsedCats, setCollapsedCats] = useState<Record<string, boolean>>({});
+  const [selectedCategory, setSelectedCategory] = useState<string>("all");
 
   // ---- Initial load: check config existence → onboarding or normal ----
   useEffect(() => {
@@ -355,37 +356,42 @@ function AppContent() {
     return result;
   }, [filteredSkills, categoriesMap, categoryOrder, categoryNames, t]);
 
+  // ---- Skills shown on the right, based on selected sidebar category ----
+  const displaySkills = useMemo(() => {
+    if (selectedCategory === "all") return filteredSkills;
+    const group = groupedSkills.find((g) => g.key === selectedCategory);
+    return group ? group.skills : [];
+  }, [selectedCategory, filteredSkills, groupedSkills]);
+
   return (
-    <div className="min-h-screen bg-gray-50 text-gray-800 dark:bg-gray-900 dark:text-gray-100">
-      <div className="mx-auto max-w-4xl p-6">
+    <div className="min-h-screen bg-ground text-ink">
+      <div className="mx-auto max-w-[1920px] p-6">
         {/* Header */}
         <div className="mb-6 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-600 text-white">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 24 24"
-                fill="currentColor"
-                className="h-6 w-6"
-              >
-                <path d="M3.4 20.4l17.45-7.48a1 1 0 000-1.84L3.4 3.6a.993.993 0 00-1.39.91L2 9.12c0 .5.37.93.87.99L17 12 2.87 13.88c-.5.07-.87.5-.87 1l.01 4.61c0 .71.73 1.2 1.39.91z" />
-              </svg>
-            </div>
+            <img
+              src={appIcon}
+              alt={t("appTitle")}
+              className="h-10 w-10 rounded-card shadow-card"
+            />
             <div>
-              <h1 className="text-xl font-bold">{t("appTitle")}</h1>
-              <p className="text-sm text-gray-500 dark:text-gray-400">{t("appSubtitle")}</p>
+              <h1 className="text-xl font-bold tracking-tight">{t("appTitle")}</h1>
+              <p className="text-sm text-ink-3 dark:text-ink-4">{t("appSubtitle")}</p>
             </div>
           </div>
           <div className="flex items-center gap-2">
             {/* Theme toggle */}
             <ThemeToggle theme={theme} onChange={handleThemeChange} />
             {/* Language toggle */}
-            <button
-              onClick={() => handleLanguageChange(language === "zh" ? "en" : "zh")}
-              className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-100 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700"
-            >
-              {language === "zh" ? "EN" : "\u4e2d"}
-            </button>
+            <Tooltip text={t("languageSwitch")}>
+              <button
+                onClick={() => handleLanguageChange(language === "zh" ? "en" : "zh")}
+                aria-label={t("languageSwitch")}
+                className="rounded-lg border border-hairline px-3 py-1.5 text-sm font-medium text-ink transition-colors hover:bg-fill dark:border-hairline dark:text-ink-4 dark:hover:bg-hover"
+              >
+                {language === "zh" ? "EN" : "\u4e2d"}
+              </button>
+            </Tooltip>
             {/* Settings / Home button (hidden during onboarding) */}
             {currentPage !== "onboarding" &&
               (currentPage !== "settings" ? (
@@ -393,7 +399,7 @@ function AppContent() {
                   <button
                     onClick={() => setCurrentPage("settings")}
                     aria-label={t("settings")}
-                    className="flex items-center justify-center rounded-lg border border-gray-300 px-3 py-1.5 text-gray-700 transition-colors hover:bg-gray-100 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700"
+                    className="flex items-center justify-center rounded-lg border border-hairline px-3 py-1.5 text-ink transition-colors hover:bg-fill dark:border-hairline dark:text-ink-4 dark:hover:bg-hover"
                   >
                     <GearIcon />
                   </button>
@@ -403,7 +409,7 @@ function AppContent() {
                   <button
                     onClick={() => setCurrentPage("home")}
                     aria-label={t("home")}
-                    className="flex items-center justify-center rounded-lg border border-gray-300 px-3 py-1.5 text-gray-700 transition-colors hover:bg-gray-100 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700"
+                    className="flex items-center justify-center rounded-lg border border-hairline px-3 py-1.5 text-ink transition-colors hover:bg-fill dark:border-hairline dark:text-ink-4 dark:hover:bg-hover"
                   >
                     <HomeIcon />
                   </button>
@@ -422,9 +428,9 @@ function AppContent() {
 
         {/* Loading */}
         {loading && (
-          <div className="flex items-center gap-3 py-10 text-gray-500 dark:text-gray-400">
+          <div className="flex items-center gap-3 py-10 text-ink-3 dark:text-ink-4">
             <svg
-              className="h-5 w-5 animate-spin text-blue-500"
+              className="h-5 w-5 animate-spin text-accent"
               xmlns="http://www.w3.org/2000/svg"
               fill="none"
               viewBox="0 0 24 24"
@@ -435,7 +441,7 @@ function AppContent() {
                 cy="12"
                 r="10"
                 stroke="currentColor"
-                strokeWidth="4"
+                strokeWidth="2"
               />
               <path
                 className="opacity-75"
@@ -454,118 +460,155 @@ function AppContent() {
 
         {/* ---- Home view ---- */}
         {!loading && currentPage === "home" && (
-          <>
-            {/* Search + Refresh */}
-            <div className="mb-4 flex items-center gap-3">
-              <input
-                type="text"
-                placeholder={t("searchPlaceholder")}
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="flex-1 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm focus:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
-              />
-              <Tooltip text={t("refresh")}>
+          <div className="flex gap-6">
+            {/* Sidebar — categories */}
+            <aside className="sticky top-6 hidden h-[calc(100vh-3rem)] w-52 flex-shrink-0 flex-col md:flex">
+              <nav className="flex-1 overflow-y-auto rounded-panel border border-hairline bg-surface p-2 shadow-card">
+                <p className="px-3 pb-1 pt-2 text-xs font-medium uppercase tracking-wide text-ink-4">
+                  {t("categories")}
+                </p>
                 <button
-                  onClick={handleRefreshSkills}
-                  disabled={refreshing}
-                  aria-label={t("refresh")}
-                  className="flex h-[38px] items-center justify-center rounded-lg border border-gray-300 px-3 text-gray-600 transition-colors hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700"
+                  onClick={() => setSelectedCategory("all")}
+                  className={
+                    "mb-1 flex w-full items-center justify-between rounded-lg px-3 py-2 text-sm transition-colors " +
+                    (selectedCategory === "all"
+                      ? "bg-accent-bg font-medium text-accent"
+                      : "text-ink-2 hover:bg-fill dark:text-ink-4 dark:hover:bg-hover")
+                  }
                 >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    className={"h-4 w-4" + (refreshing ? " animate-spin" : "")}
-                  >
-                    <polyline points="23 4 23 10 17 10" />
-                    <polyline points="1 20 1 14 7 14" />
-                    <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" />
-                  </svg>
+                  <span>{t("allSkills")}</span>
+                  <span className="rounded-full bg-fill px-2 py-0.5 text-xs font-medium text-ink-3 dark:bg-fill dark:text-ink-4">
+                    {filteredSkills.length}
+                  </span>
                 </button>
-              </Tooltip>
-              <Tooltip text={t("manageCategories")}>
-                <button
-                  onClick={() => setShowCategoryModal(true)}
-                  aria-label={t("manageCategories")}
-                  className="flex h-[38px] items-center justify-center rounded-lg border border-gray-300 px-3 text-gray-700 transition-colors hover:bg-gray-100 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700"
-                >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    className="h-4 w-4"
+                {groupedSkills.map((group) => (
+                  <button
+                    key={group.key}
+                    onClick={() => setSelectedCategory(group.key)}
+                    className={
+                      "mb-1 flex w-full items-center justify-between rounded-lg px-3 py-2 text-left text-sm transition-colors " +
+                      (selectedCategory === group.key
+                        ? "bg-accent-bg font-medium text-accent"
+                        : "text-ink-2 hover:bg-fill dark:text-ink-4 dark:hover:bg-hover")
+                    }
                   >
-                    <path d="M3 7h18M3 12h18M3 17h18" />
-                  </svg>
-                </button>
-              </Tooltip>
-            </div>
+                    <span className="truncate">{group.label}</span>
+                    <span className="ml-2 flex-shrink-0 rounded-full bg-fill px-2 py-0.5 text-xs font-medium text-ink-3 dark:bg-fill dark:text-ink-4">
+                      {group.skills.length}
+                    </span>
+                  </button>
+                ))}
+              </nav>
+            </aside>
 
-            {/* Grouped skill sections */}
-            {filteredSkills.length === 0 ? (
-              <p className="py-6 text-center text-sm text-gray-400 dark:text-gray-500">
-                {searchQuery ? t("noSearchResults") : t("noSkills")}
-              </p>
-            ) : (
-              <div className="space-y-5">
-                {groupedSkills.map((group) => {
-                  const isCollapsed = collapsedCats[group.key];
-                  return (
-                    <div key={group.key}>
-                      <button
-                        onClick={() =>
-                          setCollapsedCats((prev) => ({
-                            ...prev,
-                            [group.key]: !prev[group.key],
-                          }))
-                        }
-                        className="mb-3 flex w-full items-center gap-2 text-left text-sm font-semibold text-gray-700 transition-colors hover:text-gray-900 dark:text-gray-300 dark:hover:text-gray-100"
-                      >
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth="2"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          className={
-                            "h-4 w-4 flex-shrink-0 transition-transform " +
-                            (isCollapsed ? "" : " rotate-90")
-                          }
-                        >
-                          <polyline points="9 18 15 12 9 6" />
-                        </svg>
-                        <span>{group.label}</span>
-                        <span className="rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-500 dark:bg-gray-700 dark:text-gray-300">
-                          {group.skills.length}
-                        </span>
-                      </button>
-                      {!isCollapsed && (
-                        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                          {group.skills.map((skill) => (
-                            <SkillCard
-                              key={skill.name}
-                              skill={skill}
-                              onClick={handleSkillClick}
-                            />
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  );
-                })}
+            {/* Content — skills */}
+            <main className="min-w-0 flex-1">
+              {/* Search + Refresh + Manage */}
+              <div className="mb-4 flex items-center gap-3">
+                <input
+                  type="text"
+                  placeholder={t("searchPlaceholder")}
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="flex-1 rounded-lg border border-hairline bg-surface px-3 py-2 text-sm focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent dark:border-hairline dark:bg-surface dark:text-ink"
+                />
+                <Tooltip text={t("refresh")}>
+                  <button
+                    onClick={handleRefreshSkills}
+                    disabled={refreshing}
+                    aria-label={t("refresh")}
+                    className="flex h-[38px] items-center justify-center rounded-lg border border-hairline px-3 text-ink-2 transition-colors hover:bg-fill disabled:cursor-not-allowed disabled:opacity-50 dark:border-hairline dark:text-ink-4 dark:hover:bg-hover"
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="1.75"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      className={"h-4 w-4" + (refreshing ? " animate-spin" : "")}
+                    >
+                      <polyline points="23 4 23 10 17 10" />
+                      <polyline points="1 20 1 14 7 14" />
+                      <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" />
+                    </svg>
+                  </button>
+                </Tooltip>
+                <Tooltip text={t("manageCategories")}>
+                  <button
+                    onClick={() => setShowCategoryModal(true)}
+                    aria-label={t("manageCategories")}
+                    className="flex h-[38px] items-center justify-center rounded-lg border border-hairline px-3 text-ink transition-colors hover:bg-fill dark:border-hairline dark:text-ink-4 dark:hover:bg-hover"
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="1.75"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      className="h-4 w-4"
+                    >
+                      <line x1="8" y1="6" x2="21" y2="6" />
+                      <line x1="8" y1="12" x2="21" y2="12" />
+                      <line x1="8" y1="18" x2="21" y2="18" />
+                      <line x1="3" y1="6" x2="3.01" y2="6" />
+                      <line x1="3" y1="12" x2="3.01" y2="12" />
+                      <line x1="3" y1="18" x2="3.01" y2="18" />
+                    </svg>
+                  </button>
+                </Tooltip>
               </div>
-            )}
-          </>
+
+              {/* Mobile category chips (sidebar hidden below md) */}
+              <div className="mb-4 flex gap-2 overflow-x-auto pb-1 md:hidden">
+                <button
+                  onClick={() => setSelectedCategory("all")}
+                  className={
+                    "flex-shrink-0 rounded-full border px-3 py-1.5 text-sm transition-colors " +
+                    (selectedCategory === "all"
+                      ? "border-accent bg-accent-bg text-accent"
+                      : "border-hairline text-ink-2 dark:border-hairline dark:text-ink-4")
+                  }
+                >
+                  {t("allSkills")}
+                </button>
+                {groupedSkills.map((group) => (
+                  <button
+                    key={group.key}
+                    onClick={() => setSelectedCategory(group.key)}
+                    className={
+                      "flex-shrink-0 rounded-full border px-3 py-1.5 text-sm transition-colors " +
+                      (selectedCategory === group.key
+                        ? "border-accent bg-accent-bg text-accent"
+                        : "border-hairline text-ink-2 dark:border-hairline dark:text-ink-4")
+                    }
+                  >
+                    {group.label}
+                  </button>
+                ))}
+              </div>
+
+              {/* Skill grid */}
+              {displaySkills.length === 0 ? (
+                <p className="py-6 text-center text-sm text-ink-4 dark:text-ink-3">
+                  {searchQuery ? t("noSearchResults") : t("noSkills")}
+                </p>
+              ) : (
+                <div className="skill-grid">
+                  {displaySkills.map((skill) => (
+                    <SkillCard
+                      key={skill.name}
+                      skill={skill}
+                      onClick={handleSkillClick}
+                    />
+                  ))}
+                </div>
+              )}
+            </main>
+          </div>
         )}
 
         {/* ---- Manage categories modal ---- */}

@@ -110,7 +110,10 @@ export type TranslationKey =
   | "hideCategorized"
   | "inCategory"
   | "selectAll"
-  | "selectNone";
+  | "selectNone"
+  | "languageSwitch"
+  | "categories"
+  | "allSkills";
 
 export const translations: Record<Language, Record<TranslationKey, string>> = {
   zh: {
@@ -224,6 +227,9 @@ export const translations: Record<Language, Record<TranslationKey, string>> = {
     inCategory: "\u5df2\u5728\u300c{name}\u300d",
     selectAll: "\u5168\u9009",
     selectNone: "\u5168\u4e0d\u9009",
+    languageSwitch: "\u5207\u6362\u8bed\u8a00",
+    categories: "\u5206\u7c7b",
+    allSkills: "\u5168\u90e8 Skill",
   },
   en: {
     appTitle: "Skill Link Manager",
@@ -336,5 +342,8 @@ export const translations: Record<Language, Record<TranslationKey, string>> = {
     inCategory: "In \u201c{name}\u201d",
     selectAll: "Select All",
     selectNone: "Select None",
+    languageSwitch: "Switch language",
+    categories: "Categories",
+    allSkills: "All Skills",
   },
 };

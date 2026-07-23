@@ -10,6 +10,10 @@ interface TooltipProps {
   children: ReactNode;
   /** Preferred side. Auto-flips when there isn't enough room. */
   placement?: Placement;
+  /** Horizontal alignment of the tip relative to the trigger.
+   *  "center" (default) centers it; "start" aligns the tip's left edge with
+   *  the trigger's left edge — useful for wide triggers spanning a row. */
+  align?: "start" | "center";
   /** Extra classes for the wrapper (e.g. "flex-1" so a growing child still grows). */
   className?: string;
   /** Allow the text to wrap (use for long descriptions). Default off so short labels stay on one line. */
@@ -22,7 +26,7 @@ interface TooltipProps {
  * containers (modal cards, scroll lists). Shows on hover and keyboard focus,
  * and clamps its position to stay fully inside the viewport.
  */
-export default function Tooltip({ text, children, placement = "top", className = "", wrap = false }: TooltipProps) {
+export default function Tooltip({ text, children, placement = "top", align = "center", className = "", wrap = false }: TooltipProps) {
   const triggerRef = useRef<HTMLSpanElement>(null);
   const tipRef = useRef<HTMLDivElement>(null);
   const [trigger, setTrigger] = useState<DOMRect | null>(null);
@@ -54,7 +58,7 @@ export default function Tooltip({ text, children, placement = "top", className =
     else if (placement === "bottom" && roomBelow < tip.height + gap * 2 + 4) side = "top";
 
     let top = side === "top" ? trigger.top - gap - tip.height : trigger.bottom + gap;
-    let left = trigger.left + trigger.width / 2 - tip.width / 2;
+    let left = align === "start" ? trigger.left : trigger.left + trigger.width / 2 - tip.width / 2;
     left = Math.max(gap, Math.min(left, Math.max(gap, vw - tip.width - gap)));
     top = Math.max(gap, Math.min(top, Math.max(gap, vh - tip.height - gap)));
     setPos({ top, left });
@@ -78,7 +82,7 @@ export default function Tooltip({ text, children, placement = "top", className =
             ref={tipRef}
             role="tooltip"
             className={
-              "pointer-events-none fixed z-[100] max-w-[340px] rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-xs leading-relaxed text-gray-700 shadow-lg dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200 " +
+              "pointer-events-none fixed z-[100] max-w-[340px] rounded-card border border-hairline px-3 py-1.5 text-xs leading-relaxed text-ink shadow-overlay glass-overlay dark:border-hairline dark:text-ink " +
               (wrap ? "break-words" : "whitespace-nowrap")
             }
             style={{

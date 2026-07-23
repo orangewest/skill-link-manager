@@ -11,7 +11,7 @@ interface Props {
 
 function SunIcon() {
   return (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5">
       <circle cx="12" cy="12" r="5" />
       <line x1="12" y1="1" x2="12" y2="3" />
       <line x1="12" y1="21" x2="12" y2="23" />
@@ -27,7 +27,7 @@ function SunIcon() {
 
 function MoonIcon() {
   return (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5">
       <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
     </svg>
   );
@@ -35,7 +35,7 @@ function MoonIcon() {
 
 function MonitorIcon() {
   return (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5">
       <rect x="2" y="3" width="20" height="14" rx="2" ry="2" />
       <line x1="8" y1="21" x2="16" y2="21" />
       <line x1="12" y1="17" x2="12" y2="21" />
@@ -79,13 +79,13 @@ export default function ThemeToggle({ theme, onChange }: Props) {
         <button
           onClick={() => setOpen(!open)}
           aria-label={t("theme")}
-          className="flex items-center justify-center rounded-lg border border-gray-300 px-3 py-1.5 text-gray-700 transition-colors hover:bg-gray-100 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700"
+          className="flex items-center justify-center rounded-chip border border-hairline px-3 py-1.5 text-ink transition-colors hover:bg-fill dark:border-hairline dark:text-ink-4 dark:hover:bg-hover"
         >
           <CurrentIcon />
         </button>
       </Tooltip>
       {open && (
-        <div className="absolute right-0 z-10 mt-2 w-36 overflow-hidden rounded-lg border border-gray-200 bg-white py-1 shadow-lg dark:border-gray-700 dark:bg-gray-800">
+        <div className="absolute right-0 z-10 mt-2 w-36 overflow-hidden rounded-card border border-hairline py-1 shadow-overlay glass-overlay dark:border-hairline">
           {options.map((value) => {
             const Icon = ICONS[value];
             return (
@@ -95,10 +95,10 @@ export default function ThemeToggle({ theme, onChange }: Props) {
                   onChange(value);
                   setOpen(false);
                 }}
-                className={`flex w-full items-center gap-2 px-3 py-2 text-sm transition-colors hover:bg-gray-100 dark:hover:bg-gray-700 ${
+                className={`flex w-full items-center gap-2 px-3 py-2 text-sm transition-colors hover:bg-fill dark:hover:bg-hover ${
                   theme === value
-                    ? "font-medium text-blue-600 dark:text-blue-400"
-                    : "text-gray-700 dark:text-gray-300"
+                    ? "font-medium text-accent dark:text-accent"
+                    : "text-ink dark:text-ink-4"
                 }`}
               >
                 <Icon />

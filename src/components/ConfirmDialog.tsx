@@ -39,20 +39,20 @@ export default function ConfirmDialog({
 
   const confirmBtnClass: Record<DialogKind, string> = {
     danger: "bg-red-600 text-white hover:bg-red-700",
-    warning: "bg-amber-600 text-white hover:bg-amber-700",
-    info: "bg-blue-600 text-white hover:bg-blue-700",
+    warning: "bg-heat text-white hover:opacity-90",
+    info: "bg-accent text-white hover:bg-accent-press",
   };
 
   const iconColor: Record<DialogKind, string> = {
     danger: "text-red-600 dark:text-red-400",
-    warning: "text-amber-600 dark:text-amber-400",
-    info: "text-blue-600 dark:text-blue-400",
+    warning: "text-heat dark:text-heat",
+    info: "text-accent dark:text-accent",
   };
 
   const iconBg: Record<DialogKind, string> = {
     danger: "bg-red-50 dark:bg-red-900/30",
-    warning: "bg-amber-50 dark:bg-amber-900/30",
-    info: "bg-blue-50 dark:bg-blue-900/30",
+    warning: "bg-heat-bg dark:bg-heat-bg",
+    info: "bg-accent-bg dark:bg-accent-bg",
   };
 
   const Icon =
@@ -62,13 +62,13 @@ export default function ConfirmDialog({
     <>
       <button
         onClick={onCancel}
-        className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-100 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700"
+        className="rounded-pill border border-hairline px-4 py-2 text-sm font-medium text-ink transition-colors hover:bg-fill dark:border-hairline dark:text-ink-4 dark:hover:bg-hover"
       >
         {cancelLabel ?? t("cancel")}
       </button>
       <button
         onClick={onConfirm}
-        className={`rounded-lg px-4 py-2 text-sm font-medium text-white transition-colors ${confirmBtnClass[kind]}`}
+        className={`rounded-pill px-4 py-2 text-sm font-medium text-white shadow-cta transition-all ${confirmBtnClass[kind]}`}
       >
         {confirmLabel ?? t("confirm")}
       </button>
@@ -90,7 +90,7 @@ export default function ConfirmDialog({
       }
       footer={footer}
     >
-      <p className="whitespace-pre-wrap text-sm text-gray-600 dark:text-gray-400">
+      <p className="whitespace-pre-wrap text-sm text-ink-2 dark:text-ink-4">
         {message}
       </p>
     </Modal>
@@ -99,7 +99,7 @@ export default function ConfirmDialog({
 
 function WarningIcon({ className }: { className?: string }) {
   return (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" className={className}>
       <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
       <line x1="12" y1="9" x2="12" y2="13" />
       <line x1="12" y1="17" x2="12.01" y2="17" />
@@ -109,7 +109,7 @@ function WarningIcon({ className }: { className?: string }) {
 
 function AlertIcon({ className }: { className?: string }) {
   return (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" className={className}>
       <circle cx="12" cy="12" r="10" />
       <line x1="12" y1="8" x2="12" y2="12" />
       <line x1="12" y1="16" x2="12.01" y2="16" />
@@ -119,7 +119,7 @@ function AlertIcon({ className }: { className?: string }) {
 
 function InfoIcon({ className }: { className?: string }) {
   return (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" className={className}>
       <circle cx="12" cy="12" r="10" />
       <line x1="12" y1="16" x2="12" y2="12" />
       <line x1="12" y1="8" x2="12.01" y2="8" />

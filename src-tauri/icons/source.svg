@@ -1,21 +1,4 @@
-/**
- * Generates the source icon for the Tauri app as a crisp vector (SVG).
- * No external dependencies — uses only Node.js built-in modules.
- *
- * Produces: src-tauri/icons/source.svg
- *   - Apple-style warm-orange gradient rounded-square tile (#FFC15E → #F5660A + soft top sheen)
- *   - White "Connected Nodes" mark: three nodes joined by thin links, the
- *     "one skill linked into many tools" idea, kept minimal and legible.
- *   - Semantic: skills are linked across every AI coding tool. Flat, geometric,
- *     legible from 16px to 1024px.
- *
- * After this, run:  npx tauri icon src-tauri/icons/source.svg
- * to generate all platform-specific icon formats (ico / png / icns / ios / android).
- */
-const fs = require("fs");
-const path = require("path");
-
-const SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
   <defs>
     <linearGradient id="warmOrange" x1="0" y1="0" x2="0" y2="1">
       <stop offset="0" stop-color="#FFC15E" />
@@ -44,10 +27,3 @@ const SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" 
     <circle cx="680" cy="664" r="42" />
   </g>
 </svg>
-`;
-
-const outDir = path.join(__dirname, "src-tauri", "icons");
-fs.mkdirSync(outDir, { recursive: true });
-const outPath = path.join(outDir, "source.svg");
-fs.writeFileSync(outPath, SVG);
-console.log("Generated source icon:", outPath, `(${SVG.length} bytes)`);

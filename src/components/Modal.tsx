@@ -30,7 +30,7 @@ function CloseIcon() {
       viewBox="0 0 24 24"
       fill="none"
       stroke="currentColor"
-      strokeWidth="2"
+      strokeWidth="1.75"
       strokeLinecap="round"
       strokeLinejoin="round"
       className="h-5 w-5"
@@ -74,25 +74,25 @@ export default function Modal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 backdrop-blur-sm"
       onClick={onClose}
       role="dialog"
       aria-modal="true"
     >
       <div
-        className={`flex max-h-[85vh] w-full ${sizeClass[size]} flex-col overflow-hidden rounded-2xl border border-gray-200/80 bg-white shadow-2xl dark:border-gray-700 dark:bg-gray-800`}
+        className={`flex max-h-[85vh] w-full ${sizeClass[size]} flex-col overflow-hidden rounded-panel border border-hairline bg-surface shadow-overlay dark:border-hairline dark:bg-surface`}
         onClick={(e) => e.stopPropagation()}
       >
         {(title || icon) && (
-          <div className="flex items-center gap-3 border-b border-gray-100 px-5 py-4 dark:border-gray-700">
+          <div className="flex items-center gap-3 border-b border-hairline px-5 py-4 dark:border-hairline">
             {icon}
-            <h3 className="flex-1 text-base font-semibold text-gray-800 dark:text-gray-100">
+            <h3 className="flex-1 text-base font-semibold tracking-tight text-ink dark:text-ink">
               {title}
             </h3>
             <button
               type="button"
               onClick={onClose}
-              className="rounded-lg p-1.5 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600 dark:hover:bg-gray-700 dark:hover:text-gray-200"
+              className="rounded-chip p-1.5 text-ink-4 transition-colors hover:bg-fill hover:text-ink-2 dark:hover:bg-hover dark:hover:text-ink"
               aria-label="close"
             >
               <CloseIcon />
@@ -101,7 +101,7 @@ export default function Modal({
         )}
         <div className={`flex-1 overflow-y-auto px-5 py-4 ${bodyClassName}`}>{children}</div>
         {footer && (
-          <div className="flex justify-end gap-2 border-t border-gray-100 px-5 py-4 dark:border-gray-700">
+          <div className="flex justify-end gap-2 border-t border-hairline px-5 py-4 dark:border-hairline">
             {footer}
           </div>
         )}

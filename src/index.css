@@ -1,3 +1,160 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* ════════════════════════════════════════════════════════════════
+   Apple "Liquid Glass" design tokens
+   Light values live in :root; dark mode overrides live in .dark.
+   Every custom color in tailwind.config.js points at these vars, so
+   dark mode works by swapping the variable — almost no per-element
+   `dark:` classes are needed for color.
+   ════════════════════════════════════════════════════════════════ */
+:root {
+  /* Neutrals (interface skeleton) */
+  --bg: #f5f5f7;          /* page ground — cool grey-white, never warm */
+  --surface: #ffffff;     /* panels / cards */
+  --hover: #fbfbfd;       /* row hover tint */
+  --text: #1d1d1f;        /* primary text / titles */
+  --text-body: #424245;   /* long-form body */
+  --text-2: #6e6e73;      /* secondary / summary / meta */
+  --text-3: #86868b;      /* tertiary / captions */
+  --text-4: #aeaeb2;      /* quaternary / placeholder */
+  --faint: #d2d2d7;       /* index numbers, arrows, dividers */
+  --hairline: rgba(0, 0, 0, 0.07);  /* the divider line — used everywhere */
+
+  /* Accents (emphasis ONLY — body stays grayscale) */
+  --accent: #0071e3;      /* Apple blue — primary action / link / focus */
+  --accent-link: #0066cc; /* pressed/active blue */
+  --accent-bg: rgba(0, 113, 227, 0.1);
+  --indigo: #5e5ce6;
+  --heat: #ff6b00;
+  --heat-bg: rgba(255, 107, 0, 0.1);
+  --live: #30d158;
+  --live-bg: rgba(48, 209, 88, 0.12);
+
+  /* Component greys */
+  --track: #e8e8ed;       /* progress/meter track, toggle-off track */
+  --fill: #e8e8ed;        /* subtle neutral fill for chips / count pills */
+
+  /* Font */
+  --font: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display",
+    "Helvetica Neue", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+
+  /* Radius tiers (semantic — don't invent in-between values) */
+  --r-pill: 999px;
+  --r-chip: 6px;
+  --r-thumb: 12px;
+  --r-sheet: 16px;
+  --r-card: 18px;
+  --r-panel: 22px;
+  --r-hero: 26px;
+
+  /* Shadow (two-layer: tight contact + soft spread) */
+  --sh-card: 0 1px 2px rgba(0, 0, 0, 0.04), 0 8px 24px rgba(0, 0, 0, 0.05);
+  --sh-panel: 0 1px 3px rgba(0, 0, 0, 0.05), 0 14px 40px rgba(0, 0, 0, 0.05);
+  --sh-lift: 0 12px 32px rgba(0, 0, 0, 0.1);
+  --sh-cta: 0 20px 54px rgba(0, 113, 227, 0.24);
+  --sh-overlay: 0 2px 8px rgba(0, 0, 0, 0.1), 0 30px 80px rgba(0, 0, 0, 0.24);
+
+  /* Motion easing (CSS-first, spring-like) */
+  --ease-spring: cubic-bezier(0.32, 0.72, 0, 1);
+  --ease-out-quart: cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+.dark {
+  --bg: #1d1d1f;
+  --surface: #2c2c2e;
+  --hover: #3a3a3c;
+  --text: #f5f5f7;
+  --text-body: #d2d2d7;
+  --text-2: #aeaeb2;
+  --text-3: #8e8e93;
+  --text-4: #6e6e73;
+  --faint: #48484a;
+  --hairline: rgba(255, 255, 255, 0.1);
+
+  --accent-bg: rgba(0, 113, 227, 0.22);
+  --heat-bg: rgba(255, 107, 0, 0.18);
+  --live-bg: rgba(48, 209, 88, 0.18);
+
+  --track: #3a3a3c;
+  --fill: #3a3a3c;
+
+  --sh-card: 0 1px 2px rgba(0, 0, 0, 0.3), 0 8px 24px rgba(0, 0, 0, 0.35);
+  --sh-panel: 0 1px 3px rgba(0, 0, 0, 0.35), 0 14px 40px rgba(0, 0, 0, 0.4);
+  --sh-lift: 0 12px 32px rgba(0, 0, 0, 0.45);
+  --sh-cta: 0 20px 54px rgba(0, 113, 227, 0.4);
+  --sh-overlay: 0 2px 8px rgba(0, 0, 0, 0.4), 0 30px 80px rgba(0, 0, 0, 0.6);
+}
+
+@layer base {
+  html {
+    font-family: var(--font);
+    font-optical-sizing: auto;
+  }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    font-family: var(--font);
+  }
+}
+
+/* ── Glass (liquid) — ONLY on overlapping layers ── */
+.glass-nav {
+  background: rgba(245, 245, 247, 0.72);
+  backdrop-filter: saturate(180%) blur(20px);
+  -webkit-backdrop-filter: saturate(180%) blur(20px);
+  border-bottom: 1px solid var(--hairline);
+}
+.glass-overlay {
+  background: rgba(245, 245, 247, 0.72);
+  backdrop-filter: saturate(180%) blur(20px);
+  -webkit-backdrop-filter: saturate(180%) blur(20px);
+}
+.dark .glass-nav,
+.dark .glass-overlay {
+  background: rgba(28, 28, 30, 0.72);
+}
+
+/* ── Live / online pulsing dot ── */
+@keyframes pulse-dot {
+  0% { box-shadow: 0 0 0 0 rgba(48, 209, 88, 0.5); }
+  70% { box-shadow: 0 0 0 7px rgba(48, 209, 88, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(48, 209, 88, 0); }
+}
+.pulse-dot {
+  animation: pulse-dot 2.2s infinite;
+}
+
+/* ── Modal materialize (scale + opacity together) ── */
+@keyframes materialize {
+  from { opacity: 0; transform: scale(0.96); }
+  to { opacity: 1; transform: scale(1); }
+}
+.materialize {
+  animation: materialize 0.32s var(--ease-spring);
+}
+
+/* ── Skill grid: width-aware, cards stay generously sized & adapt per row ── */
+.skill-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 0.75rem;
+}
+
+/* Respect reduced-motion: kill non-essential motion */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+  .materialize {
+    animation: none;
+  }
+}

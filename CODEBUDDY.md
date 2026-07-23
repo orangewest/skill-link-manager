@@ -33,7 +33,7 @@ It is a Tauri 2 app with two sides that communicate exclusively through Tauri's 
 
 **Standalone scripts (pre-dated the app, kept for reference/ad-hoc use):**
 - `link-skills.ps1` + `run.bat` — PowerShell that reproduces the `apply_links` logic outside the app.
-- `generate-icon.cjs` — Node script that writes `src-tauri/icons/source.png`; then regenerate all platform icons with `npx tauri icon src-tauri/icons/source.png`.
+- `generate-icon.cjs` — Node script that writes the vector `src-tauri/icons/source.svg` (accent tile + white line "link" brand mark); then regenerate all platform icons with `npx tauri icon src-tauri/icons/source.svg`.
 
 ## Commands
 

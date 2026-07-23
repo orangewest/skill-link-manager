@@ -31,7 +31,7 @@ function Icon({ path, className = "h-4 w-4" }: { path: string; className?: strin
       viewBox="0 0 24 24"
       fill="none"
       stroke="currentColor"
-      strokeWidth="2"
+      strokeWidth="1.75"
       strokeLinecap="round"
       strokeLinejoin="round"
       className={className}
@@ -135,13 +135,13 @@ function SkillPicker({
         <>
           <button
             onClick={onClose}
-            className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-100 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700"
+            className="rounded-pill border border-hairline px-3 py-1.5 text-sm font-medium text-ink transition-colors hover:bg-fill dark:border-hairline dark:text-ink-4 dark:hover:bg-hover"
           >
             {t("cancel")}
           </button>
           <button
             onClick={confirm}
-            className="rounded-lg bg-blue-600 px-4 py-1.5 text-sm font-medium text-white transition-colors hover:bg-blue-700"
+            className="rounded-pill bg-accent px-4 py-1.5 text-sm font-medium text-white shadow-cta transition-all hover:bg-accent-press"
           >
             {t("done")}
           </button>
@@ -151,7 +151,7 @@ function SkillPicker({
       <div className="flex max-h-[65vh] flex-col">
         <div className="mb-3 flex items-center gap-2">
           <div className="relative flex-1">
-            <span className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400">
+            <span className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-ink-4">
               <SearchIcon />
             </span>
             <input
@@ -159,7 +159,7 @@ function SkillPicker({
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder={t("searchSkills")}
-              className="w-full rounded-lg border border-gray-300 bg-white py-2 pl-9 pr-3 text-sm focus:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100"
+              className="w-full rounded-card border border-hairline bg-surface py-2 pl-9 pr-3 text-sm focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent dark:border-hairline dark:bg-surface dark:text-ink"
             />
           </div>
           <div className="flex flex-shrink-0 items-center gap-1">
@@ -167,12 +167,12 @@ function SkillPicker({
               <button
                 onClick={toggleSelectAll}
                 aria-label={allVisibleSelected ? t("selectNone") : t("selectAll")}
-                className="rounded border border-gray-300 p-1.5 text-gray-600 transition-colors hover:bg-gray-100 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700"
+                className="rounded-chip border border-hairline p-1.5 text-ink-2 transition-colors hover:bg-fill dark:border-hairline dark:text-ink-4 dark:hover:bg-hover"
               >
                 <CheckboxIcon checked={allVisibleSelected} />
               </button>
             </Tooltip>
-            <span className="whitespace-nowrap text-xs text-gray-500 dark:text-gray-400">
+            <span className="whitespace-nowrap text-xs text-ink-3 dark:text-ink-4">
               {t("selectedCount", { count: selected.size })}
             </span>
           </div>
@@ -180,7 +180,7 @@ function SkillPicker({
 
         <div className="flex-1 space-y-1 overflow-y-auto pr-1">
           {visible.length === 0 ? (
-            <p className="py-4 text-center text-sm text-gray-400 dark:text-gray-500">
+            <p className="py-4 text-center text-sm text-ink-4 dark:text-ink-3">
               {t("noSkills")}
             </p>
           ) : (
@@ -192,7 +192,7 @@ function SkillPicker({
                 <label
                   key={skill.name}
                   className={
-                    "flex cursor-pointer items-center gap-2 rounded-lg px-2 py-1.5 hover:bg-gray-50 dark:hover:bg-gray-700 " +
+                    "flex cursor-pointer items-center gap-2 rounded-chip px-2 py-1.5 hover:bg-fill dark:hover:bg-hover " +
                     (inOther ? "opacity-70" : "")
                   }
                 >
@@ -200,13 +200,13 @@ function SkillPicker({
                     type="checkbox"
                     checked={checked}
                     onChange={() => toggle(skill.name)}
-                    className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-400 dark:border-gray-600 dark:bg-gray-900"
+                    className="h-4 w-4 rounded border-hairline text-accent focus:ring-accent dark:border-hairline dark:bg-surface"
                   />
-                  <span className="flex-1 truncate text-sm text-gray-700 dark:text-gray-200">
+                  <span className="flex-1 truncate text-sm text-ink dark:text-ink">
                     {skill.name}
                   </span>
                   {inOther && (
-                    <span className="whitespace-nowrap text-xs text-gray-400 dark:text-gray-500">
+                    <span className="whitespace-nowrap text-xs text-ink-4 dark:text-ink-3">
                       {t("inCategory", { name: cur })}
                     </span>
                   )}
@@ -218,7 +218,7 @@ function SkillPicker({
 
         <button
           onClick={() => setShowCategorized((v) => !v)}
-          className="mt-2 self-start text-xs text-blue-600 hover:underline dark:text-blue-400"
+          className="mt-2 self-start text-xs text-accent hover:underline dark:text-accent"
         >
           {showCategorized ? t("hideCategorized") : t("showCategorized")}
         </button>
@@ -332,11 +332,11 @@ export default function CategoryManager({
               if (e.key === "Enter") commitAddCategory();
             }}
             placeholder={t("categoryName")}
-            className="flex-1 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm focus:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100"
+            className="flex-1 rounded-card border border-hairline bg-surface px-3 py-2 text-sm focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent dark:border-hairline dark:bg-surface dark:text-ink"
           />
           <button
             onClick={commitAddCategory}
-            className="flex items-center gap-1.5 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700"
+            className="flex items-center gap-1.5 rounded-pill bg-accent px-4 py-2 text-sm font-medium text-white shadow-cta transition-all hover:bg-accent-press"
           >
             <PlusIcon />
             {t("addCategory")}
@@ -344,7 +344,7 @@ export default function CategoryManager({
         </div>
 
         {order.length === 0 ? (
-          <p className="mb-2 text-sm text-gray-400 dark:text-gray-500">
+          <p className="mb-2 text-sm text-ink-4 dark:text-ink-3">
             {t("noCategories")}
           </p>
         ) : (
@@ -360,15 +360,15 @@ export default function CategoryManager({
               return (
                 <Fragment key={cat}>
                   {dragIndex !== null && overIndex === idx && (
-                    <div className="mx-1 h-0.5 rounded bg-blue-500" />
+                    <div className="mx-1 h-0.5 rounded bg-accent" />
                   )}
                   <li
                     data-row
                     className={
-                      "flex items-center gap-2 rounded-lg border bg-gray-50 px-2 py-1.5 dark:bg-gray-900 " +
+                      "flex items-center gap-2 rounded-card border bg-fill px-2 py-1.5 dark:bg-surface " +
                       (dragIndex === idx
-                        ? "border-blue-400 opacity-50 ring-1 ring-blue-400 "
-                        : "border-gray-100 dark:border-gray-700 ")
+                        ? "border-accent opacity-50 ring-1 ring-accent "
+                        : "border-hairline dark:border-hairline ")
                     }
                   >
                     <Tooltip text={t("dragToReorder")}>
@@ -376,7 +376,7 @@ export default function CategoryManager({
                         onPointerDown={(e) => handlePointerDown(e, idx)}
                         onPointerMove={handlePointerMove}
                         onPointerUp={handlePointerUp}
-                        className="cursor-grab touch-none select-none text-gray-300 hover:text-gray-400 active:cursor-grabbing dark:text-gray-600 dark:hover:text-gray-400"
+                        className="cursor-grab touch-none select-none text-ink-4 hover:text-ink-4 active:cursor-grabbing dark:text-ink-2 dark:hover:text-ink-4"
                       >
                         <DragHandleIcon />
                       </span>
@@ -394,7 +394,7 @@ export default function CategoryManager({
                         }
                       }}
                       onBlur={() => onRenameCategory(cat, renameValue)}
-                      className="flex-1 select-text rounded border border-blue-400 bg-white px-1.5 py-0.5 text-sm focus:outline-none dark:bg-gray-800 dark:text-gray-100"
+                      className="flex-1 select-text rounded-chip border border-accent bg-surface px-1.5 py-0.5 text-sm focus:outline-none dark:bg-surface dark:text-ink"
                     />
                   ) : (
                     <Tooltip text={t("rename")} className="min-w-0 flex-1">
@@ -404,10 +404,10 @@ export default function CategoryManager({
                           setRenameValue(cat);
                         }}
                         aria-label={t("rename")}
-                        className="flex w-full items-center gap-2 truncate text-left text-sm text-gray-700 dark:text-gray-200"
+                        className="flex w-full items-center gap-2 truncate text-left text-sm text-ink dark:text-ink"
                       >
                         <span className="truncate">{cat}</span>
-                        <span className="rounded-full bg-gray-200 px-1.5 py-0.5 text-xs text-gray-500 dark:bg-gray-700 dark:text-gray-300">
+                        <span className="rounded-full bg-fill px-1.5 py-0.5 text-xs text-ink-3 dark:bg-fill dark:text-ink-4">
                           {memberCount(cat)}
                         </span>
                       </button>
@@ -417,7 +417,7 @@ export default function CategoryManager({
                     <button
                       onClick={() => setPickerCategory(cat)}
                       aria-label={t("addSkillToCategory")}
-                      className="rounded p-1.5 text-gray-500 hover:bg-gray-200 dark:hover:bg-gray-700"
+                      className="rounded-chip p-1.5 text-ink-3 hover:bg-fill dark:hover:bg-hover"
                     >
                       <PlusIcon />
                     </button>
@@ -429,7 +429,7 @@ export default function CategoryManager({
                         setRenameValue(cat);
                       }}
                       aria-label={t("rename")}
-                      className="rounded p-1.5 text-gray-500 hover:bg-gray-200 dark:hover:bg-gray-700"
+                      className="rounded-chip p-1.5 text-ink-3 hover:bg-fill dark:hover:bg-hover"
                     >
                       <EditIcon />
                     </button>
@@ -448,11 +448,11 @@ export default function CategoryManager({
               );
             })}
             {dragIndex !== null && overIndex === order.length && (
-              <div className="mx-1 h-0.5 rounded bg-blue-500" />
+              <div className="mx-1 h-0.5 rounded bg-accent" />
             )}
           </ul>
         )}
-        <p className="mt-3 text-xs text-gray-400 dark:text-gray-500">
+        <p className="mt-3 text-xs text-ink-4 dark:text-ink-3">
           {t("dragToReorderHint")}
         </p>
       </Modal>

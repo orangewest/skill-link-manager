@@ -18,7 +18,7 @@ function EditIcon() {
       viewBox="0 0 24 24"
       fill="none"
       stroke="currentColor"
-      strokeWidth="2"
+      strokeWidth="1.75"
       strokeLinecap="round"
       strokeLinejoin="round"
       className="h-4 w-4"
@@ -36,7 +36,7 @@ function TrashIcon() {
       viewBox="0 0 24 24"
       fill="none"
       stroke="currentColor"
-      strokeWidth="2"
+      strokeWidth="1.75"
       strokeLinecap="round"
       strokeLinejoin="round"
       className="h-4 w-4"
@@ -328,20 +328,20 @@ export default function SettingsPage({ config, onConfigSaved, onBack, onToolDirC
       {/* Back button */}
       <button
         onClick={onBack}
-        className="mb-4 flex items-center gap-1 text-sm text-gray-600 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200"
+        className="mb-4 flex items-center gap-1 text-sm text-ink-2 hover:text-ink dark:text-ink-4 dark:hover:text-ink"
       >
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4">
           <line x1="19" y1="12" x2="5" y2="12" />
           <polyline points="12 19 5 12 12 5" />
         </svg>
         {t("back")}
       </button>
 
-      <h2 className="mb-6 text-lg font-bold text-gray-800 dark:text-gray-100">{t("settingsTitle")}</h2>
+      <h2 className="mb-6 text-lg font-bold tracking-tight text-ink">{t("settingsTitle")}</h2>
 
       {/* Error */}
       {error && (
-        <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-800 dark:bg-red-900/30 dark:text-red-300">
+        <div className="mb-4 rounded-card border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-800 dark:bg-red-900/30 dark:text-red-300">
           <strong>{t("error")}: </strong>
           {error}
         </div>
@@ -349,14 +349,14 @@ export default function SettingsPage({ config, onConfigSaved, onBack, onToolDirC
 
       {/* Info message (e.g. links removed count) */}
       {infoMsg && (
-        <div className="mb-4 rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700 dark:border-green-800 dark:bg-green-900/30 dark:text-green-300">
+        <div className="mb-4 rounded-card border border-live-bg bg-live-bg px-4 py-3 text-sm text-live dark:border-live-bg dark:bg-live-bg dark:text-live">
           {infoMsg}
         </div>
       )}
 
       {/* Shared dir config */}
       <div className="mb-8">
-        <label className="mb-2 block text-sm font-semibold text-gray-700 dark:text-gray-300">
+        <label className="mb-2 block text-sm font-semibold text-ink dark:text-ink-4">
           {t("sharedDirConfig")}
         </label>
         <div className="flex gap-2">
@@ -371,19 +371,19 @@ export default function SettingsPage({ config, onConfigSaved, onBack, onToolDirC
           <button
             onClick={handleSaveSharedDir}
             disabled={saving}
-            className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-gray-300 dark:disabled:bg-gray-700"
+            className="rounded-pill bg-accent px-5 py-2 text-sm font-medium text-white shadow-cta transition-all hover:bg-accent-press disabled:cursor-not-allowed disabled:bg-fill disabled:shadow-none dark:disabled:bg-fill"
           >
             {saving ? t("loading") : t("save")}
           </button>
         </div>
         {savedMsg && (
-          <p className="mt-1 text-xs text-green-600 dark:text-green-400">{t("saved")}</p>
+          <p className="mt-1 text-xs text-live dark:text-live">{t("saved")}</p>
         )}
       </div>
 
       {/* Tool dir management */}
       <div>
-        <h3 className="mb-3 flex items-center justify-between text-sm font-semibold text-gray-700 dark:text-gray-300">
+        <h3 className="mb-3 flex items-center justify-between text-sm font-semibold text-ink dark:text-ink-4">
           <span>{t("toolDirManagement")}</span>
           <div className="flex items-center gap-2">
             <Tooltip text={allToolDirsChecked ? t("selectNone") : t("selectAll")}>
@@ -391,7 +391,7 @@ export default function SettingsPage({ config, onConfigSaved, onBack, onToolDirC
                 onClick={handleToggleAllToolDirs}
                 disabled={toolDirs.length === 0}
                 aria-label={allToolDirsChecked ? t("selectNone") : t("selectAll")}
-                className="rounded-lg border border-gray-300 p-1.5 text-gray-600 transition-colors hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700"
+                className="rounded-card border border-hairline p-1.5 text-ink-2 transition-colors hover:bg-fill disabled:cursor-not-allowed disabled:opacity-50 dark:border-hairline dark:text-ink-4 dark:hover:bg-hover"
               >
                 <CheckboxIcon checked={allToolDirsChecked} className="h-3.5 w-3.5" />
               </button>
@@ -401,9 +401,9 @@ export default function SettingsPage({ config, onConfigSaved, onBack, onToolDirC
                 onClick={handleRedetect}
                 disabled={redetecting}
                 aria-label={t("redetectAgents")}
-                className="flex items-center gap-1 rounded-lg border border-gray-300 px-3 py-1 text-xs font-medium text-gray-600 transition-colors hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700"
+                className="flex items-center gap-1 rounded-card border border-hairline px-3 py-1 text-xs font-medium text-ink-2 transition-colors hover:bg-fill disabled:cursor-not-allowed disabled:opacity-50 dark:border-hairline dark:text-ink-4 dark:hover:bg-hover"
               >
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={"h-3.5 w-3.5" + (redetecting ? " animate-spin" : "")}>
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" className={"h-3.5 w-3.5" + (redetecting ? " animate-spin" : "")}>
                   <polyline points="23 4 23 10 17 10" />
                   <polyline points="1 20 1 14 7 14" />
                   <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" />
@@ -415,17 +415,17 @@ export default function SettingsPage({ config, onConfigSaved, onBack, onToolDirC
         </h3>
 
         {/* Tool dir list */}
-        <div className="mb-4 space-y-2">
+        <div className="mb-4 divide-y divide-hairline overflow-hidden rounded-card border border-hairline bg-surface shadow-card">
           {toolDirs.map((td, index) => (
             <div
               key={index}
-              className="flex items-center gap-2 rounded-lg border border-gray-200 bg-white p-3 dark:border-gray-700 dark:bg-gray-800"
+              className="flex items-center gap-2 p-3 transition-colors hover:bg-hover"
             >
               <input
                 type="checkbox"
                 checked={toolDirsChecked[td.name] ?? true}
                 onChange={() => handleToggleToolDir(td.name)}
-                className="h-4 w-4 flex-shrink-0 rounded border-gray-300 text-blue-600 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-900"
+                className="h-4 w-4 flex-shrink-0 rounded border-hairline text-accent focus:ring-accent dark:border-hairline dark:bg-surface"
               />
               {editingIndex === index ? (
                 <>
@@ -434,7 +434,7 @@ export default function SettingsPage({ config, onConfigSaved, onBack, onToolDirC
                     value={editName}
                     onChange={(e) => setEditName(e.target.value)}
                     placeholder={t("toolDirName")}
-                    className="w-24 rounded border border-gray-300 px-2 py-1 text-sm focus:border-blue-400 focus:outline-none dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100"
+                    className="w-24 rounded border border-hairline px-2 py-1 text-sm focus:border-accent focus:outline-none dark:border-hairline dark:bg-surface dark:text-ink"
                   />
                   <PathInput
                     value={editPath}
@@ -445,33 +445,33 @@ export default function SettingsPage({ config, onConfigSaved, onBack, onToolDirC
                   />
                   <button
                     onClick={handleSaveEdit}
-                    className="flex-shrink-0 text-sm text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
+                    className="flex-shrink-0 text-sm text-accent hover:text-accent-press dark:text-accent dark:hover:text-accent"
                   >
                     {t("save")}
                   </button>
                   <button
                     onClick={() => setEditingIndex(null)}
-                    className="flex-shrink-0 text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+                    className="flex-shrink-0 text-sm text-ink-3 hover:text-ink dark:text-ink-4 dark:hover:text-ink"
                   >
                     {t("cancel")}
                   </button>
                 </>
               ) : (
                 <>
-                  <Tooltip text={t("clickToViewDetail")} className="min-w-0 flex-1">
+                  <Tooltip text={t("clickToViewDetail")} align="start" className="min-w-0 flex-1">
                     <div
                       className="cursor-pointer"
                       onClick={() => onToolDirClick(td.name)}
                     >
-                      <div className="font-medium text-gray-700 hover:text-blue-600 dark:text-gray-200 dark:hover:text-blue-400">{td.name}</div>
-                      <div className="truncate text-xs text-gray-400 dark:text-gray-500">{td.path}</div>
+                      <div className="font-medium text-ink hover:text-accent dark:text-ink dark:hover:text-accent">{td.name}</div>
+                      <div className="truncate text-xs text-ink-4 dark:text-ink-3">{td.path}</div>
                     </div>
                   </Tooltip>
                   <Tooltip text={t("edit")}>
                     <button
                       onClick={() => handleStartEdit(index)}
                       aria-label={t("edit")}
-                      className="flex-shrink-0 rounded p-1.5 text-gray-500 transition-colors hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700"
+                      className="flex-shrink-0 rounded p-1.5 text-ink-3 transition-colors hover:bg-fill dark:text-ink-4 dark:hover:bg-hover"
                     >
                       <EditIcon />
                     </button>
@@ -492,13 +492,13 @@ export default function SettingsPage({ config, onConfigSaved, onBack, onToolDirC
         </div>
 
         {/* Add new tool dir */}
-        <div className="flex items-start gap-2 rounded-lg border border-dashed border-gray-300 p-3 dark:border-gray-600">
+        <div className="flex items-start gap-2 rounded-card border border-dashed border-hairline p-3 dark:border-hairline">
           <input
             type="text"
             value={newName}
             onChange={(e) => setNewName(e.target.value)}
             placeholder={t("toolDirName")}
-            className="w-24 flex-shrink-0 rounded border border-gray-300 px-2 py-1 text-sm focus:border-blue-400 focus:outline-none dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100"
+            className="w-24 flex-shrink-0 rounded border border-hairline px-2 py-1 text-sm focus:border-accent focus:outline-none dark:border-hairline dark:bg-surface dark:text-ink"
           />
           <div className="min-w-0 flex-1">
             <PathInput
@@ -510,7 +510,7 @@ export default function SettingsPage({ config, onConfigSaved, onBack, onToolDirC
             />
             {duplicatePath && (
               <p className="mt-1 flex items-center gap-1 text-xs text-red-600 dark:text-red-400">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-3.5 w-3.5 flex-shrink-0">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" className="h-3.5 w-3.5 flex-shrink-0">
                   <path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
                   <line x1="12" y1="9" x2="12" y2="13" />
                   <line x1="12" y1="17" x2="12.01" y2="17" />
@@ -522,7 +522,7 @@ export default function SettingsPage({ config, onConfigSaved, onBack, onToolDirC
           <button
             onClick={handleAddToolDir}
             disabled={!newName.trim() || !newPath.trim() || duplicatePath}
-            className="flex-shrink-0 rounded bg-green-600 px-3 py-1 text-sm text-white transition-colors hover:bg-green-700 disabled:cursor-not-allowed disabled:bg-gray-300 dark:disabled:bg-gray-700"
+            className="flex-shrink-0 rounded-pill bg-accent px-4 py-1.5 text-sm font-medium text-white shadow-cta transition-all hover:bg-accent-press disabled:cursor-not-allowed disabled:bg-fill disabled:shadow-none dark:disabled:bg-fill"
           >
             {t("add")}
           </button>
@@ -567,13 +567,13 @@ export default function SettingsPage({ config, onConfigSaved, onBack, onToolDirC
           <>
             <button
               onClick={closeRedetectDialog}
-              className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-100 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700"
+              className="rounded-card border border-hairline px-4 py-2 text-sm font-medium text-ink transition-colors hover:bg-fill dark:border-hairline dark:text-ink-4 dark:hover:bg-hover"
             >
               {t("cancel")}
             </button>
             <button
               onClick={handleRedetectConfirm}
-              className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700"
+              className="rounded-pill bg-accent px-5 py-2 text-sm font-medium text-white shadow-cta transition-all hover:bg-accent-press"
             >
               {t("addSelected")}
             </button>
@@ -581,24 +581,24 @@ export default function SettingsPage({ config, onConfigSaved, onBack, onToolDirC
         }
       >
         <div className="flex max-h-[60vh] flex-col">
-          <p className="mb-3 text-sm text-gray-600 dark:text-gray-400">
+          <p className="mb-3 text-sm text-ink-2 dark:text-ink-4">
             {t("redetectSelectHint")}
           </p>
-          <div className="flex-1 space-y-2 overflow-y-auto pr-1">
+          <div className="flex-1 divide-y divide-hairline overflow-y-auto rounded-card border border-hairline bg-surface pr-1">
             {redetectCandidates.map((d) => (
               <label
                 key={d.name}
-                className="flex cursor-pointer items-start gap-2 rounded-lg border border-gray-200 bg-white p-3 dark:border-gray-700 dark:bg-gray-800"
+                className="flex cursor-pointer items-start gap-2 p-3 transition-colors hover:bg-hover"
               >
                 <input
                   type="checkbox"
                   checked={redetectChecked.has(d.name)}
                   onChange={() => handleRedetectToggle(d.name)}
-                  className="mt-0.5 h-4 w-4 flex-shrink-0 rounded border-gray-300 text-blue-600 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-900"
+                  className="mt-0.5 h-4 w-4 flex-shrink-0 rounded border-hairline text-accent focus:ring-accent dark:border-hairline dark:bg-surface"
                 />
                 <div className="min-w-0">
-                  <div className="font-medium text-gray-700 dark:text-gray-200">{d.name}</div>
-                  <div className="truncate text-xs text-gray-400 dark:text-gray-500">{d.path}</div>
+                  <div className="font-medium text-ink dark:text-ink">{d.name}</div>
+                  <div className="truncate text-xs text-ink-4 dark:text-ink-3">{d.path}</div>
                 </div>
               </label>
             ))}
